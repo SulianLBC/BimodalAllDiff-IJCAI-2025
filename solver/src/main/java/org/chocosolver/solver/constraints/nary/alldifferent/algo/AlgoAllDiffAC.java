@@ -32,7 +32,7 @@ import java.util.BitSet;
  * 
  * @author Jean-Guillaume Fages
  */
-public class AlgoAllDiffAC {
+public class AlgoAllDiffAC implements IAlldifferentAlgorithm {
 
     //***********************************************************************************
     // VARIABLES
