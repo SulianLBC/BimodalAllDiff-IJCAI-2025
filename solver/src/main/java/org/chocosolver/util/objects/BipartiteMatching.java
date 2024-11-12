@@ -97,19 +97,8 @@ public class BipartiteMatching {
         size--;
     }
 
-    public void computeSize() {
-        size = 0;
-        for (int u = minU; u <= maxU; u++) {
-            if (inMatchingU(u)) {size++;}
-        }
-    }
-
     public int getSize() {
         return size;
-    }
-
-    public void incrementSize(){
-        size++;
     }
 
     public boolean isMaximum() {

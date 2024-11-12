@@ -1,12 +1,14 @@
 package org.chocosolver.util.objects;
 
+import org.chocosolver.memory.IEnvironment;
+
 /**
  * The Tracking list is similar to a doubly linked list
  * for which each element has a predecessor and a successor, implemented by arrays
  * An artifical source node is added at the beginning of the list
  * An artificial sink node is added at the end of the list
  * The tracking list allows to call the functions TrackPrev and TrackNext that are specific to this data structure
- * Furthermore, it is possible to distinguish the elements removed/reinserted to the list and to the universe, in case the tracking list is used in a dynamic environment
+ * Furthermore, it is possible to distinguish the elements removed/reinserted to the list and to the universe in case the tracking list is used in a dynamic environment
  * @author Sulian Le Bozec-Chiffoleau
  * @since 17 Oct. 2024
  */
@@ -18,8 +20,6 @@ public class TrackingList {
     private IntCircularQueue removedUniverse;
     private final int source;
     private final int sink;
-    private final int sourceIndex;
-    private final int sinkIndex;
     private final int minValue;
     private final int maxValue;
     private final int maxSize;
@@ -32,10 +32,8 @@ public class TrackingList {
         this.maxSize = maxValue - minValue + 1;
         this.source = minValue -1;
         this.sink = maxValue + 1;
-        this.sourceIndex = -1;
-        this.sinkIndex = maxSize;
-        this.successor = new int[maxSize+1];
-        this.predecessor = new int[maxSize+1];
+        this.successor = new int[maxSize+1]; // Position 0 indicates the successor of the source node
+        this.predecessor = new int[maxSize+1]; // Position maxSize indicates the predecessor of the sink node
         for (int i = 0; i < maxSize+1; i++) {
             this.successor[i] = i;
             this.predecessor[i] = i-1;
@@ -82,8 +80,8 @@ public class TrackingList {
      */
     public boolean isPresent(int e) {
         int i = convertToIndex(e);
-        if (isSourceIndex(i) || isSinkIndex(i)) {return true;}
-        return getNextIndex(getPreviousIndex(i)) == i;
+        if (e == source || e == sink) {return true;}
+        return predecessor[successor[i + 1]] == i;
     }
 
     /**
@@ -105,13 +103,13 @@ public class TrackingList {
      */
     public void remove(int e) {
         int i = convertToIndex(e);
-        if (isSourceIndex(i) || isSinkIndex(i)) {throw new Error("Error: You can not remove the source nor the sink");}
-        else if (!isPresentIndex(i)) {throw new Error("Error: You can not remove an element that is not present in the in-list");} 
+        if (e == source || e == sink) {throw new Error("Error: You can not remove the source nor the sink");}
+        else if (predecessor[successor[i + 1]] == i) {throw new Error("Error: You can not remove an element that is not present in the in-list");} 
         else {
-        setNextIndex(getPreviousIndex(i), getNextIndex(i));
-        setPreviousIndex(getNextIndex(i), getPreviousIndex(i));
-        removed.addLast(i);
-        size--;
+            successor[predecessor[i] + 1] = successor[i + 1];
+            predecessor[successor[i + 1]] = predecessor[i];
+            removed.addLast(i);
+            size--;
         }
     }
 
@@ -120,15 +118,43 @@ public class TrackingList {
      */
     public void removeFromUniverse(int e) {
         int i = convertToIndex(e);
-        if (isSourceIndex(i) || isSinkIndex(i)) {throw new Error("Error: You can not remove from the universe the source nor the sink");}
-        else if (!isPresentIndex(i)) {throw new Error("Error: You can not remove from the universe an element that is not present in the in-list");}
+        if (e == source || e == sink) {throw new Error("Error: You can not remove from the universe the source nor the sink");}
+        else if (predecessor[successor[i + 1]] == i) {throw new Error("Error: You can not remove from the universe an element that is not present in the in-list");}
         else if (!removed.isEmpty()) {throw new Error("Error: You can not remove an element from the universe if some elements of the universe are not present in the in-list");}
         else {
-        setNextIndex(getPreviousIndex(i), getNextIndex(i));
-        setPreviousIndex(getNextIndex(i), getPreviousIndex(i));
-        size--;
-        universeSize--;
-        removedUniverse.addLast(i);
+            successor[predecessor[i] + 1] = successor[i + 1];
+            predecessor[successor[i + 1]] = predecessor[i];
+            size--;
+            universeSize--;
+            removedUniverse.addLast(i);
+        }
+    }
+
+    /**
+     * This method is used when using the Tracking List as a backtrackable structure in Choco
+     */
+    public void removeFromUniverse(int e, IEnvironment env) {
+        int i = convertToIndex(e);
+        if (e == source || e == sink) {throw new Error("Error: You can not remove from the universe the source nor the sink");}
+        else if (predecessor[successor[i + 1]] == i) {throw new Error("Error: You can not remove from the universe an element that is not present in the in-list");}
+        else if (!removed.isEmpty()) {throw new Error("Error: You can not remove an element from the universe if some elements of the universe are not present in the in-list");}
+        else {
+            int pi = predecessor[i];
+            int si = successor[i + 1];
+            successor[pi + 1] = si;
+            predecessor[si] = pi;
+            size--;
+            universeSize--;
+            removedUniverse.addLast(i);
+
+            // Here we store the operations to call during the backtrack
+            env.save(() -> {
+                successor[pi + 1] = i;
+                predecessor[si] = i;
+                size++;
+                universeSize++;
+                removedUniverse.pollLast();
+            });
         }
     }
 
@@ -136,13 +162,37 @@ public class TrackingList {
      * Reinserts an element in the in-list
      * @param e // The element to reinsert 
      * @param universe // A boolean indicating if the element is reinserted in the universe
+     * Warning: Don't use this method outside the class unless you know what you are doing
      */
     public void reinsert(int e, boolean universe) {
         int i = convertToIndex(e);
-        setNextIndex(getPreviousIndex(i), i);
-        setPreviousIndex(getNextIndex(i), i);
+        if (e == source || e == sink || predecessor[successor[i + 1]] == i) {throw new Error("Error: You can not reinsert an element that is already present in the in-list");}
+        successor[predecessor[i] + 1] = i;
+        predecessor[successor[i + 1]] = i;
         size++;
         if(universe) {universeSize++;}
+    }
+
+    /**
+     * Reinserts in the in-list the last removed element
+     */
+    public void reinsertLastRemoved() {
+        int i = removed.pollLast();
+        successor[predecessor[i] + 1] = i;
+        predecessor[successor[i + 1]] = i;
+        size++;
+    }
+
+    /**
+     * Reinserts in the universe the last removed element
+     */
+    public void reinsertLastRemovedUniverse() {
+        if (!removed.isEmpty()) {throw new Error("Error: You must refill the in-list before the universe");}
+        int i = removedUniverse.pollLast();
+        successor[predecessor[i] + 1] = i;
+        predecessor[successor[i + 1]] = i;
+        size++;
+        universeSize++;
     }
 
     /**
@@ -150,7 +200,10 @@ public class TrackingList {
      */
     public void refill() {
         while (!removed.isEmpty()) {
-            reinsertIndex(removed.pollLast(), false);
+            int i = removed.pollLast();
+            successor[predecessor[i] + 1] = i;
+            predecessor[successor[i + 1]] = i;
+            size++;
         }
     }
 
@@ -160,7 +213,11 @@ public class TrackingList {
     public void refillUniverse() {
         if (!removed.isEmpty()) {throw new Error("Error: You must refill the in-list before the universe");}
         while (!removedUniverse.isEmpty()) {
-            reinsertIndex(removedUniverse.pollLast(), true);
+            int i = removedUniverse.pollLast();
+            successor[predecessor[i] + 1] = i;
+            predecessor[successor[i + 1]] = i;
+            size++;
+            universeSize++;
         }
     }
 
@@ -170,8 +227,8 @@ public class TrackingList {
      */
     public int trackLeft(int e) {
             int i = convertToIndex(e);
-            while (!isPresentIndex(i)) {
-                i = getPreviousIndex(i);
+            while (e != source && e != sink && predecessor[successor[i + 1]] != i) {
+                i = predecessor[i];
             }
             return convertToValue(i);
     }
@@ -182,10 +239,10 @@ public class TrackingList {
      */
     public int trackRight(int e) {
         int i = convertToIndex(e);
-        while (!isPresentIndex(i)) {
-            i = getNextIndex(i);
-        }
-        return convertToValue(i);
+            while (e != source && e != sink && predecessor[successor[i + 1]] != i) {
+                i = successor[i + 1];
+            }
+            return convertToValue(i);
     }
 
     @Override
@@ -201,35 +258,10 @@ public class TrackingList {
 
     //////////////////////////////////////////
     // Private functions of the Tracking List
-    // The main objective of these functions if to perform several queries on the tracking list without having to convert the indices and elements every time
     //////////////////////////////////////////
 
     private int convertToIndex(int e) {return e - minValue;}
 
     private int convertToValue(int i) {return i + minValue;}
-
-    private int getNextIndex(int i) {return successor[i+1];}
-
-    private int getPreviousIndex(int i) {return predecessor[i];}
-
-    private void setNextIndex(int i, int x) {successor[i+1] = x;}
-
-    private void setPreviousIndex(int i, int x) {predecessor[i] = x;}
-
-    private void reinsertIndex(int i, boolean universe) {
-        setNextIndex(getPreviousIndex(i), i);
-        setPreviousIndex(getNextIndex(i), i);
-        size++;
-        if(universe) {universeSize++;}
-    }
-
-    private boolean isSourceIndex(int i){return i == sourceIndex;}
-
-    private boolean isSinkIndex(int i){return i == sinkIndex;}
-
-    private boolean isPresentIndex(int i) {
-        if (i == sourceIndex || i == sinkIndex) {return true;}
-        return getNextIndex(getPreviousIndex(i)) == i;
-    }
 
 }

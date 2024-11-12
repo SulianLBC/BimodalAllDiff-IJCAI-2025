@@ -10,11 +10,14 @@
 package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 
 import org.chocosolver.solver.ICause;
+import org.chocosolver.solver.Model;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.objects.BipartiteMatching;
 import org.chocosolver.util.objects.IntCircularQueue;
 import org.chocosolver.util.objects.TrackingList;
+import org.chocosolver.memory.IEnvironment;
+
 
 
 /**
@@ -22,7 +25,7 @@ import org.chocosolver.util.objects.TrackingList;
  *
  * Uses a variant of Regin algorithm based on the partially complemented (PC) approach
  * <p/>
- * Keeps track of previous matching for further calls
+ * Keeps track of previous matching and the sets of relevant variables and values for further calls
  * <p/>
  * 
  * @author Sulian Le Bozec-Chiffoleau
@@ -39,6 +42,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     public static final int TUNED = 3;
 
     ICause aCause;
+    Model model;
     protected IntVar[] vars;
     private final int R;
     private TrackingList variablesDynamic;
@@ -62,6 +66,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     private IntCircularQueue toRemoveFromVariableUniverse;
     private IntCircularQueue toRemoveFromValueUniverse;
     private int mode;
+    private boolean pruned;
     private long timeMatchingNano;
     private long timeSCCNano;
     private long timePruneNano;
@@ -74,6 +79,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     public AlgoAllDiffHybrid(IntVar[] variables, ICause cause) {
         // Variables and data structures for the whole procedure
         this.aCause = cause;
+        this.model = variables[0].getModel();
         this.vars = variables;
         this.R = variables.length;
         this.variablesDynamic = new TrackingList(0, R-1);
@@ -91,8 +97,8 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         this.fail = minValue - 1;
         this.matching = new BipartiteMatching(0, R-1, minValue, maxValue);
 
-        // TODO : for the moment we only consider the CLASSIC mode
-        this.mode = CLASSIC;
+        // TODO : for the moment we only consider the HYBRID mode
+        this.mode = HYBRID;
 
         // Specific data structures for finding the maximum matching
         this.parentBFS = new int[D];
@@ -108,7 +114,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         this.pre = new int[D];
         this.low = new int[D];
 
-        // Specific data structures for the backtrack
+        // Specific data structures for the decrementality and backtrackability of the universes of variables and values
         this.toRemoveFromVariableUniverse = new IntCircularQueue(R);
         this.toRemoveFromValueUniverse = new IntCircularQueue(D);
     }
@@ -132,11 +138,11 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
 
     public boolean propagate() throws ContradictionException {
         updateUniverseOpening();
-        boolean satisfiable = findMaximumMatching();
-        // TODO : case where the constraint can not be satisfied
+        if (!findMaximumMatching()) {throw new Error("Error: the AllDifferent constraint can not be satisfied.");}
+        this.pruned = false;
         filter();
         updateUniverseEnding();
-        return satisfiable;
+        return this.pruned;
     }
 
     //***********************************************************************************
@@ -159,7 +165,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                     augmentMatching(val);
                 }
                 else {
-                    // It is not possible to ge a maximum matching --> the constraint can not be satisfied
+                    // It is not possible to get a maximum matching --> the constraint can not be satisfied
                     timeMatchingNano += System.nanoTime() - timeStart;
                     timeTotalNano += System.nanoTime() - timeStart;
                     return false;
@@ -183,7 +189,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
             matching.setMatch(getParent(v), v);
             v = v_next;
         }
-        // The last variable we ecounter is unmatched
+        // The last variable we ecounter is the one we performed the BFS from, and is then unmatched
         matching.setMatch(getParent(v), v);
     }
 
@@ -260,7 +266,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                 hyDFS(matching.getMatchV(val));
             }
         }
-        if (atLeastTwo) {Prune(t_node);} // If there is only one SCC, no pruning is possible so there is no point to call the Prune procedure.
+        if (atLeastTwo) {prune(t_node);} // If there is only one SCC, no pruning is possible so there is no point to call the Prune procedure.
 
         // The remaining unvisited values are present in the domain of no variables, thus we can remove them from the universe of values for the next call to the propagator
         int val = valuesDynamic.getSource();
@@ -296,7 +302,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
             int ub = vars[var].getUB();
             for (val = vars[var].getLB(); val <= ub; val = vars[var].nextValue(val)) {
                 // ======================= Case 1 : explore a non-visited value =======================
-                if (val != matching.getMatchU(var) && valuesDynamic.isPresent(val)) {Process(var, val);}
+                if (val != matching.getMatchU(var) && valuesDynamic.isPresent(val)) {process(var, val);}
 
                 // ======================= Case 2 :  update M(var).low via an already visited and unassigned value =======================
                 else if (val != matching.getMatchU(var) && inStack[val]) {low[matching.getMatchU(var)] = min(low[matching.getMatchU(var)], pre[val]);} // M(var).low = min(M(var).low, val.pre)
@@ -311,11 +317,11 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                 while(valuesDynamic.hasNext(pointerVar) && vars[var].contains(valuesDynamic.getNext(pointerVar))) { // Go to the last consecutive non-domain value
                     pointerVar = valuesDynamic.getNext(pointerVar);
                 }
-                if (valuesDynamic.hasNext(pointerVar)) {Process(var, valuesDynamic.getNext(pointerVar));} // If we did not reach the end of the list of unvisited values, the next value is a domain value
+                if (valuesDynamic.hasNext(pointerVar)) {process(var, valuesDynamic.getNext(pointerVar));} // If we did not reach the end of the list of unvisited values, the next value is a domain value
             }
 
-            // ======================= Step 2 : update M(var).low thanks to the most ancient already visited and unassigned value =======================
-            for (int index = 0; index < tarjanStack.size(); index++) { // Iterate over tarjan's stack from the bottom until you find a value in the domain of var, or it is not possible to reduce M(var).low
+            // ======================= Step 2 : update M(var).low thanks to the most ancient visited and unassigned value =======================
+            for (int index = 0; index < tarjanStack.size(); index++) { // Iterate over tarjan's stack from the bottom until you find a value in the domain of var, or until it is not possible to decrease M(var).low
                 val = tarjanStack.get(index);
                 if (vars[var].contains(val) || pre[val] >= low[matching.getMatchU(var)]) {
                     low[matching.getMatchU(var)] = min(low[matching.getMatchU(var)], pre[val]); // M(var).low = min(M(var).low, val.pre)
@@ -323,7 +329,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                 }
             }
         }
-        if (pre[matching.getMatchU(var)] == low[matching.getMatchU(var)]) {Prune(matching.getMatchU(var));}
+        if (pre[matching.getMatchU(var)] == low[matching.getMatchU(var)]) {prune(matching.getMatchU(var));} // If M(var) is the root of its SCC, then we run the pruning procedure
 
     }
 
@@ -345,7 +351,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         }
     }
 
-    private void Process(int var, int val) throws ContradictionException {
+    private void process(int var, int val) throws ContradictionException {
         if (matching.inMatchingV(val)) {    // If the value is already matched, we continue the exploration from its matched variable
             hyDFS(matching.getMatchV(val));
             low[matching.getMatchU(var)] = min(low[matching.getMatchU(var)], low[val]); // M(var).low = min(M(var).low, val.low)
@@ -360,7 +366,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         }
     }
 
-    private void Prune(int root) throws ContradictionException {
+    private void prune(int root) throws ContradictionException {
         long timeStart = System.nanoTime();
         atLeastTwo = true;
         SCC.clear();
@@ -386,11 +392,11 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
 
         // Particular case where we can force the instanciation of the matched variable to the unique value of the SCC, and remove them from the universes of variables and values
         if (SCC.size() == 1) {
-            // The unique value of the SCC is necessarily matched, and is in the domain of no other variable than its matched one
-            val = SCC.pollLast();
+            // The unique value of the SCC is necessarily matched, otherwise it would have been in the same SCC as t_node
+            val = SCC.get(0);
             var = matching.getMatchV(val);
             
-            vars[var].instantiateTo(val, aCause); //TODO: is it correct to instantiate here?
+            vars[var].instantiateTo(val, aCause);
 
             toRemoveFromVariableUniverse.addLast(var);
             toRemoveFromValueUniverse.addLast(val);
@@ -406,6 +412,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                         if (complementSCC.isPresent(domainValue)) {
                             // Prune the pair (var, domainValue)
                             vars[var].removeValue(domainValue, aCause);
+                            pruned = true;
                         }
                     }
 
@@ -416,6 +423,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                         if (vars[var].contains(complementValue)) {
                             // Prune the pair (var, complementValue)
                             vars[var].removeValue(complementValue, aCause);
+                            pruned = true;
                         }
                     }
                 }
@@ -445,39 +453,58 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
 
     //***********************************************************************************
     // Dynamic Structures and Backtrack Management
+    //      In this section we manage the decrementality and backtrack of the universe of variables variablesDynamic
+    //      and the universes of values valuesDynamic and complementSCC
+    //      The backtrack operations are managed within the removeFromUniverse method of the TrackingList 
     //***********************************************************************************
 
-    private void updateUniverseOpening(){
+
+    private void updateUniverseOpening(){ // Here we detect the recently instanciated variables and remove them and their values from the universes of variables and values
+        IEnvironment env = model.getEnvironment();
         int var  = variablesDynamic.getSource();
         while (variablesDynamic.hasNext(var)) {
             var = variablesDynamic.getNext(var);
-            if (vars[var].isInstantiated() && valuesDynamic.isPresent(vars[var].getValue())) {
-                variablesDynamic.removeFromUniverse(var);
-                valuesDynamic.removeFromUniverse(vars[var].getValue());
-                complementSCC.removeFromUniverse(vars[var].getValue());
-                //TODO : manage backtrack
+            if (vars[var].isInstantiated()) {
+                variablesDynamic.removeFromUniverse(var, env);
+                if (valuesDynamic.isPresent(vars[var].getValue())) {
+                    valuesDynamic.removeFromUniverse(vars[var].getValue(), env);
+                    complementSCC.removeFromUniverse(vars[var].getValue(), env);
+                }
             }
         }
     }
 
-    private void updateUniverseEnding() {
+    private void updateUniverseEnding() { // Here we remove from the universes the variables and values detected during the filtering procedure
+        IEnvironment env = model.getEnvironment();
+
         // Manage the universe of variables
         variablesDynamic.refill();
         for (int index = 0; index < toRemoveFromVariableUniverse.size(); index++) {
-            variablesDynamic.removeFromUniverse(toRemoveFromVariableUniverse.get(index));
-            //TODO : manage backtrack
+            int var = toRemoveFromVariableUniverse.get(index);
+            variablesDynamic.removeFromUniverse(var, env);
         }
         toRemoveFromVariableUniverse.clear();
 
-        // Manage the universe of values
+        // Manage the universes of values
         valuesDynamic.refill();
         complementSCC.refill();
         for (int index = 0; index < toRemoveFromValueUniverse.size(); index++) {
-            valuesDynamic.removeFromUniverse(toRemoveFromValueUniverse.get(index));
-            complementSCC.removeFromUniverse(toRemoveFromValueUniverse.get(index));
-            //TODO : manage backtrack
+            valuesDynamic.removeFromUniverse(toRemoveFromValueUniverse.get(index), env);
+            complementSCC.removeFromUniverse(toRemoveFromValueUniverse.get(index), env);
         }
         toRemoveFromValueUniverse.clear();
     }
 
+    //***********************************************************************************
+    // Getter for Time Monitoring
+    //***********************************************************************************
+
+
+    public long getTimeMatchingNanoSeconds() {return timeMatchingNano;}
+
+    public long getTimeSCCNanoSeconds() {return timeSCCNano;}
+
+    public long getTimePruneNanoSeconds() {return timePruneNano;}
+
+    public long getTimeTotalNanoSeconds() {return timeTotalNano;}
 }
