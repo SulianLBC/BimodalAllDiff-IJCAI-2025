@@ -44,29 +44,29 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     ICause aCause;
     Model model;
     protected IntVar[] vars;
-    private final int R;
-    private TrackingList variablesDynamic;
+    private final int R;    // Total number of variables
+    private TrackingList variablesDynamic;  // The dynamic list of uninstanciated variables
     private final int minValue;
     private final int maxValue;
-    private final int D;
-    private TrackingList valuesDynamic;
-    private final int fail;
-    private BipartiteMatching matching;
-    private int[] parentBFS;
-    private IntCircularQueue queueBFS;
-    private final int t_node;
-    private IntCircularQueue SCC;
-    private TrackingList complementSCC;
-    private IntCircularQueue tarjanStack;
-    private boolean[] inStack;
-    private int[] pre;
-    private int[] low;
-    private int numVisit;
-    private boolean atLeastTwo;
-    private IntCircularQueue toRemoveFromVariableUniverse;
-    private IntCircularQueue toRemoveFromValueUniverse;
-    private int mode;
-    private boolean pruned;
+    private final int D;    // Total number of values
+    private TrackingList valuesDynamic;  // The dynamic list of values present in the domain of at least one variable and not matched to an instantiated variable
+    private final int fail; // Symbol signifying we couldn't find an augmenting path
+    private BipartiteMatching matching; // The matching used dynamically
+    private int[] parentBFS; // Array storing the parent of each value-node in the BFS tree
+    private IntCircularQueue queueBFS; // Queue of the variables to explore during the BFS
+    private final int t_node; // Symbol representing the artificial sink node of the Residual Graph
+    private IntCircularQueue SCC; // A stack used to store the last SCC found (only containing the value-nodes)
+    private TrackingList complementSCC; // List of the values that are not in SCC
+    private IntCircularQueue tarjanStack; // The stack used in Tarjan's algorithm to costruct the SCCs
+    private boolean[] inStack; // Boolean array informing the presence of a value in the stack
+    private int[] pre; // Pre visit order of the values
+    private int[] low; // Low point of the values
+    private int numVisit; // Current visit number of the DFS in Tarjan's algorithm
+    private boolean atLeastTwo; // Allows to check wether there is at least two SCCs
+    private IntCircularQueue toRemoveFromVariableUniverse; // The variables detected during the procedure that will be removed from variablesDynamic
+    private IntCircularQueue toRemoveFromValueUniverse; // The values detected during the procedure that will be removed from valuesDynamic and complementSCC
+    private int mode; // Indiating the mode in which we are using the procedure (Classic, Complement, Hybrid or Tuned)
+    private boolean pruned; // True if some variable-value pairs were pruned
     private long timeMatchingNano;
     private long timeSCCNano;
     private long timePruneNano;
@@ -261,9 +261,11 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         long timeStart = System.nanoTime();
         this.numVisit = 1;
         this.atLeastTwo = false;
-        for(int val : matching.getMatchedV()) {
-            if (valuesDynamic.isPresent(val)) {
-                hyDFS(matching.getMatchV(val));
+        int var = variablesDynamic.getSource();
+        while(variablesDynamic.hasNext(var)) {
+            var = variablesDynamic.getNext(var);
+            if (valuesDynamic.isPresent(matching.getMatchU(var))) {
+                hyDFS(var);
             }
         }
         if (atLeastTwo) {prune(t_node);} // If there is only one SCC, no pruning is possible so there is no point to call the Prune procedure.

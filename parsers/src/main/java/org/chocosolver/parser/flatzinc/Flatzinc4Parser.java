@@ -1,12 +1,3 @@
-/*
- * This file is part of choco-parsers, http://choco-solver.org/
- *
- * Copyright (c) 2024, IMT Atlantique. All rights reserved.
- *
- * Licensed under the BSD 4-clause license.
- *
- * See LICENSE file in the project root for full license information.
- */
 // Generated from Flatzinc4Parser.g4 by ANTLR 4.9.3
 package org.chocosolver.parser.flatzinc;
 
