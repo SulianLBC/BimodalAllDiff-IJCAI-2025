@@ -176,24 +176,24 @@ public class TrackingList {
     /**
      * Reinserts in the in-list the last removed element
      */
-    // public void reinsertLastRemoved() {
-    //     int i = removed.pollLast();
-    //     successor[predecessor[i] + 1] = i;
-    //     predecessor[successor[i + 1]] = i;
-    //     size++;
-    // }
+    public void reinsertLastRemoved() {
+        int i = removed.pollLast();
+        successor[predecessor[i] + 1] = i;
+        predecessor[successor[i + 1]] = i;
+        size++;
+    }
 
     /**
      * Reinserts in the universe the last removed element
      */
-    // public void reinsertLastRemovedUniverse() {
-    //     if (!removed.isEmpty()) {throw new Error("Error: You must refill the in-list before the universe");}
-    //     int i = removedUniverse.pollLast();
-    //     successor[predecessor[i] + 1] = i;
-    //     predecessor[successor[i + 1]] = i;
-    //     size++;
-    //     universeSize++;
-    // }
+    public void reinsertLastRemovedUniverse() {
+        if (!removed.isEmpty()) {throw new Error("Error: You must refill the in-list before the universe");}
+        int i = removedUniverse.pollLast();
+        successor[predecessor[i] + 1] = i;
+        predecessor[successor[i + 1]] = i;
+        size++;
+        universeSize++;
+    }
 
     /**
      * Refills the tracking list with all the elements of the universe

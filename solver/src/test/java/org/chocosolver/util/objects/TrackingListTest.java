@@ -104,7 +104,7 @@ public class TrackingListTest {
         assertEquals(Tlist.trackLeft(7), 7);
         assertEquals(Tlist.trackRight(7), 7);
 
-        Tlist.reinsert(6, false);
+        Tlist.reinsertLastRemoved();
         assertEquals(Tlist.trackLeft(5), 4);
         assertEquals(Tlist.trackRight(5), 6);
         assertEquals(Tlist.trackLeft(6), 6);
