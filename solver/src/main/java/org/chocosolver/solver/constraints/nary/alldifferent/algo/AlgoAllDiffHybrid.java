@@ -36,10 +36,10 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     // VARIABLES
     //***********************************************************************************
 
-    public static final int CLASSIC = 0;
-    public static final int COMPLEMENT = 1;
-    public static final int HYBRID = 2;
-    public static final int TUNED = 3;
+    public static final String CLASSIC = "AC_CLASSIC";
+    public static final String COMPLEMENT = "AC_COMPLEMENT";
+    public static final String HYBRID = "AC_HYBRID";
+    public static final String TUNED = "AC_TUNED";
 
     ICause aCause;
     Model model;
@@ -65,7 +65,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     private boolean atLeastTwo; // Allows to check wether there is at least two SCCs
     private IntCircularQueue toRemoveFromVariableUniverse; // The variables detected during the procedure that will be removed from variablesDynamic
     private IntCircularQueue toRemoveFromValueUniverse; // The values detected during the procedure that will be removed from valuesDynamic and complementSCC
-    private int mode; // Indiating the mode in which we are using the procedure (Classic, Complement, Hybrid or Tuned)
+    private String mode; // Indiating the mode in which we are using the procedure (Classic, Complement, Hybrid or Tuned)
     private boolean pruned; // True if some variable-value pairs were pruned
     private long timeMatchingNano;
     private long timeSCCNano;
@@ -76,7 +76,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     // CONSTRUCTORS
     //***********************************************************************************
 
-    public AlgoAllDiffHybrid(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffHybrid(IntVar[] variables, ICause cause, String ACmode) {
         // Variables and data structures for the whole procedure
         this.aCause = cause;
         this.model = variables[0].getModel();
@@ -97,8 +97,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         this.fail = minValue - 1;
         this.matching = new BipartiteMatching(0, R-1, minValue, maxValue);
 
-        // TODO : for the moment we only consider the HYBRID mode
-        this.mode = HYBRID;
+        this.mode = ACmode;
 
         // Specific data structures for finding the maximum matching
         this.parentBFS = new int[D];

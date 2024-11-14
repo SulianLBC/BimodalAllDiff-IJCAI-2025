@@ -13,6 +13,8 @@ import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
 import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC;
 import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffACFast;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffHybrid;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.IAlldifferentAlgorithm;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.ESat;
@@ -35,7 +37,7 @@ public class PropAllDiffAC extends Propagator<IntVar> {
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffAC filter;
+    protected IAlldifferentAlgorithm filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -52,6 +54,11 @@ public class PropAllDiffAC extends Propagator<IntVar> {
         this.filter = fast ?
             new AlgoAllDiffACFast(variables, this):
             new AlgoAllDiffAC(variables, this);
+    }
+
+    public PropAllDiffAC(IntVar[] variables, String mode) {
+        super(variables, PropagatorPriority.QUADRATIC, false);
+        this.filter = new AlgoAllDiffHybrid(variables, this, mode);
     }
 
     //***********************************************************************************

@@ -15,15 +15,23 @@ import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.binary.PropNotEqualX_Y;
 import org.chocosolver.solver.variables.IntVar;
 
+import java.util.Objects;
+
 /**
  * Ensures that all variables from VARS take a different value.
  * The consistency level should be chosen among "AC", "BC", "FC" and "DEFAULT".
  */
 public class AllDifferent extends Constraint {
 
+    public static String OPTION = "DEFAULT";
+
     public static final String AC= "AC";
     public static final String AC_REGIN= "AC_REGIN";
     public static final String AC_ZHANG = "AC_ZHANG";
+    public static final String AC_CLASSIC= "AC_CLASSIC";
+    public static final String AC_COMPLEMENT = "AC_COMPLEMENT";
+    public static final String AC_HYBRID= "AC_HYBRID";
+    public static final String AC_TUNED = "AC_TUNED";
     public static final String BC= "BC";
     public static final String FC= "FC";
     public static final String NEQS= "NEQS";
@@ -34,6 +42,9 @@ public class AllDifferent extends Constraint {
     }
 
     private static Propagator[] createPropagators(IntVar[] VARS, String consistency) {
+        if(!Objects.equals(OPTION, "DEFAULT")){
+            consistency = OPTION;
+        }
         switch (consistency) {
             case NEQS: {
                 int s = VARS.length;
@@ -55,6 +66,14 @@ public class AllDifferent extends Constraint {
             case AC:
             case AC_ZHANG:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, true)};
+            case AC_CLASSIC:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, AC_CLASSIC)};
+            case AC_COMPLEMENT:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, AC_COMPLEMENT)};
+            case AC_HYBRID:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, AC_HYBRID)};
+            case AC_TUNED:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, AC_TUNED)};
             case DEFAULT:
             default: {
                 // adds a Probabilistic AC (only if at least some variables have an enumerated domain)

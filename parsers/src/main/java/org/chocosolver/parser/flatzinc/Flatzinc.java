@@ -18,6 +18,7 @@ import org.chocosolver.solver.Model;
 import org.chocosolver.solver.ResolutionPolicy;
 import org.chocosolver.solver.Settings;
 import org.chocosolver.solver.Solver;
+import org.chocosolver.solver.constraints.nary.alldifferent.AllDifferent;
 import org.chocosolver.solver.search.strategy.BlackBoxConfigurator;
 import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.search.strategy.SearchParams;
@@ -74,6 +75,9 @@ public class Flatzinc extends RegParser {
             "(default: OUTPUT, i.e., restricted to the variables declared in output).")
     protected CompleteSearch ocs = CompleteSearch.OUTPUT;
 
+    @Option(name = "-ad", usage = "")
+    protected String ad = "DEFAULT";
+
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
@@ -99,6 +103,7 @@ public class Flatzinc extends RegParser {
 
     @Override
     public void createSettings() {
+        AllDifferent.OPTION = ad;
         defaultSettings = Settings.prod()
                 .setMinCardinalityForSumDecomposition(256)
                 .setLearntClausesDominancePerimeter(0)
