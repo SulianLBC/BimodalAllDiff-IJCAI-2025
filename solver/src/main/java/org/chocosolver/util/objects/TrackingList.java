@@ -104,7 +104,7 @@ public class TrackingList {
     public void remove(int e) {
         int i = convertToIndex(e);
         if (e == source || e == sink) {throw new Error("Error: You can not remove the source nor the sink");}
-        else if (predecessor[successor[i + 1]] == i) {throw new Error("Error: You can not remove an element that is not present in the in-list");} 
+        else if (predecessor[successor[i + 1]] != i) {throw new Error("Error: You can not remove an element that is not present in the in-list");} 
         else {
             successor[predecessor[i] + 1] = successor[i + 1];
             predecessor[successor[i + 1]] = predecessor[i];
@@ -119,7 +119,7 @@ public class TrackingList {
     public void removeFromUniverse(int e) {
         int i = convertToIndex(e);
         if (e == source || e == sink) {throw new Error("Error: You can not remove from the universe the source nor the sink");}
-        else if (predecessor[successor[i + 1]] == i) {throw new Error("Error: You can not remove from the universe an element that is not present in the in-list");}
+        else if (predecessor[successor[i + 1]] != i) {throw new Error("Error: You can not remove from the universe an element that is not present in the in-list");}
         else if (!removed.isEmpty()) {throw new Error("Error: You can not remove an element from the universe if some elements of the universe are not present in the in-list");}
         else {
             successor[predecessor[i] + 1] = successor[i + 1];
@@ -136,7 +136,7 @@ public class TrackingList {
     public void removeFromUniverse(int e, IEnvironment env) {
         int i = convertToIndex(e);
         if (e == source || e == sink) {throw new Error("Error: You can not remove from the universe the source nor the sink");}
-        else if (predecessor[successor[i + 1]] == i) {throw new Error("Error: You can not remove from the universe an element that is not present in the in-list");}
+        else if (predecessor[successor[i + 1]] != i) {throw new Error("Error: You can not remove from the universe an element that is not present in the in-list");}
         else if (!removed.isEmpty()) {throw new Error("Error: You can not remove an element from the universe if some elements of the universe are not present in the in-list");}
         else {
             int pi = predecessor[i];

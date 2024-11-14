@@ -45,17 +45,17 @@ public class BipartiteMatching {
 
     public int getsizeV() {return this.sizeV;}
 
-    /**
-     * Returns the array of the matched vertices of V
-     * Warning: If all vertices of U are not matched it will contain some UNMATCHED values, use it wisely
-     */
-    public int[] getMatchedU() {return matchingV;}
+    // /**
+    //  * Returns the array of the matched vertices of V
+    //  * Warning: If all vertices of U are not matched it will contain some UNMATCHED values, use it wisely
+    //  */
+    // public int[] getMatchedU() {return matchingV;}
 
-    /**
-     * Returns the array of the matched vertices of V
-     * Warning: If all vertices of V are not matched it will contain some UNMATCHED values, use it wisely
-     */
-    public int[] getMatchedV() {return matchingU;}
+    // /**
+    //  * Returns the array of the matched vertices of V
+    //  * Warning: If all vertices of V are not matched it will contain some UNMATCHED values, use it wisely
+    //  */
+    // public int[] getMatchedV() {return matchingU;}
 
     public boolean inMatchingU(int u) {
         return matchingU[u - minU] != UNMATCHED;
@@ -124,11 +124,13 @@ public class BipartiteMatching {
         return count == 0;
     }
 
-    public void printMatching() {
-        System.out.println("Current matching:");
+    @Override
+    public String toString() {
+        String printedString = "";
         for (int u = minU; u <= maxU; u++) {
             if (inMatchingU(u)) {System.out.println("x" + u + " <--> " + getMatchU(u));}
         }
+        return printedString;
     }
 
     public boolean equals(BipartiteMatching otherMatching) {

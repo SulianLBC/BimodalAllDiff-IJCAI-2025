@@ -396,7 +396,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
             val = SCC.get(0);
             var = matching.getMatchV(val);
             
-            vars[var].instantiateTo(val, aCause);
+            vars[var].instantiateTo(val, aCause); //TODO: will the pruning also be managed by the Forward Checking ? Because it is not necessary, everything is done in the filtering procedure
 
             toRemoveFromVariableUniverse.addLast(var);
             toRemoveFromValueUniverse.addLast(val);
