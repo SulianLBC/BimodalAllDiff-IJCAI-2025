@@ -48,6 +48,10 @@ public class TrackingListTest {
             assertEquals(e, num);
         }
         assertEquals(num, 1);
+
+        assertEquals(Tlist.isPresent(1), true);
+        assertEquals(Tlist.isPresent(5), true);
+        assertEquals(Tlist.isPresent(10), true);
     }
 
     @Test(groups = "1s", timeOut=60000)
@@ -89,6 +93,10 @@ public class TrackingListTest {
             assertEquals(e, num);
         }
         assertEquals(num, 1);
+
+        assertEquals(Tlist.isPresent(1), true);
+        assertEquals(Tlist.isPresent(5), true);
+        assertEquals(Tlist.isPresent(10), true);
     }
 
     @Test(groups = "1s", timeOut=60000)
@@ -104,6 +112,9 @@ public class TrackingListTest {
         assertEquals(Tlist.trackLeft(7), 7);
         assertEquals(Tlist.trackRight(7), 7);
 
+        assertEquals(Tlist.isPresent(5), false);
+        assertEquals(Tlist.isPresent(6), false);
+
         Tlist.reinsertLastRemoved();
         assertEquals(Tlist.trackLeft(5), 4);
         assertEquals(Tlist.trackRight(5), 6);
@@ -111,6 +122,14 @@ public class TrackingListTest {
         assertEquals(Tlist.trackRight(6), 6);
         assertEquals(Tlist.trackLeft(7), 7);
         assertEquals(Tlist.trackRight(7), 7);
+
+        assertEquals(Tlist.isPresent(5), false);
+        assertEquals(Tlist.isPresent(6), true);
+
+        Tlist.reinsertLastRemoved();
+
+        assertEquals(Tlist.isPresent(5), true);
+        assertEquals(Tlist.isPresent(6), true);
     }
 
     @Test(groups = "1s", timeOut=60000)
@@ -169,5 +188,9 @@ public class TrackingListTest {
             assertEquals(e, num);
         }
         assertEquals(num, 1);
+
+        assertEquals(Tlist.isPresent(1), true);
+        assertEquals(Tlist.isPresent(5), true);
+        assertEquals(Tlist.isPresent(10), true);
     }
 }

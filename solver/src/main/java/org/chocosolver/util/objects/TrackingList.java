@@ -1,3 +1,12 @@
+/*
+ * This file is part of choco-solver, http://choco-solver.org/
+ *
+ * Copyright (c) 2024, IMT Atlantique. All rights reserved.
+ *
+ * Licensed under the BSD 4-clause license.
+ *
+ * See LICENSE file in the project root for full license information.
+ */
 package org.chocosolver.util.objects;
 
 import org.chocosolver.memory.IEnvironment;
@@ -82,6 +91,7 @@ public class TrackingList {
         int i = convertToIndex(e);
         if (e == source || e == sink) {return true;}
         return predecessor[successor[i + 1]] == i;
+        //return successor[predecessor[i] + 1] == i;//DEBUG
     }
 
     /**
@@ -110,6 +120,7 @@ public class TrackingList {
             predecessor[successor[i + 1]] = predecessor[i];
             removed.addLast(i);
             size--;
+            //if(!hasNext(e)) {System.out.println("The predecessor of the sink is now " + getPrevious(e));}//DEBUG
         }
     }
 
@@ -127,6 +138,7 @@ public class TrackingList {
             size--;
             universeSize--;
             removedUniverse.addLast(i);
+            //if(!hasNext(e)) {System.out.println("The predecessor of the sink is now " + getPrevious(e));}//DEBUG
         }
     }
 
@@ -146,8 +158,10 @@ public class TrackingList {
             size--;
             universeSize--;
             removedUniverse.addLast(i);
+            //if(!hasNext(e)) {System.out.println("The predecessor of the sink is now " + getPrevious(e));}//DEBUG
 
             // Here we store the operations to call during the backtrack
+            //if(!hasNext(e)) {System.out.println("The predecessor of the sink should be repaired to be " + convertToValue(i));}//DEBUG
             env.save(() -> {
                 successor[pi + 1] = i;
                 predecessor[si] = i;

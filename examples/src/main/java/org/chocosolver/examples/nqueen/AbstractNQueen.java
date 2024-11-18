@@ -23,7 +23,7 @@ import org.kohsuke.args4j.Option;
 public abstract class AbstractNQueen extends AbstractProblem {
 
     @Option(name = "-q", usage = "Number of queens.", required = false)
-    int n = 4;
+    int n = 500;
     IntVar[] vars;
 
     @Override
@@ -33,6 +33,7 @@ public abstract class AbstractNQueen extends AbstractProblem {
 
     @Override
     public void solve() {
+        model.getSolver().showStatistics();
         model.getSolver().solve();
     }
 }

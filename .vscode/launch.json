@@ -1,0 +1,414 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Parser",
+            "request": "launch",
+            "mainClass": "org.chocosolver.parsers/org.chocosolver.parser.Parser",
+            "projectName": "choco-parsers"
+        },
+        {
+            "type": "java",
+            "name": "ChocoDIMACS",
+            "request": "launch",
+            "mainClass": "org.chocosolver.parsers/org.chocosolver.parser.dimacs.ChocoDIMACS",
+            "projectName": "choco-parsers"
+        },
+        {
+            "type": "java",
+            "name": "ChocoFZN",
+            "request": "launch",
+            "mainClass": "org.chocosolver.parsers/org.chocosolver.parser.flatzinc.ChocoFZN",
+            "args": "C:\\Users\\sulia\\Documents\\Thèse\\Code\\choco-hybrid\\instances\\mzn_alldiff\\mapf_ins_g16_p10_a20.fzn -lvl INFO -ad AC_CLASSIC",
+            "projectName": "choco-parsers"
+        },
+        {
+            "type": "java",
+            "name": "RandomPhrase",
+            "request": "launch",
+            "mainClass": "org.chocosolver.parsers/org.chocosolver.parser.flatzinc.parser.RandomPhrase",
+            "projectName": "choco-parsers"
+        },
+        {
+            "type": "java",
+            "name": "ChocoMPS",
+            "request": "launch",
+            "mainClass": "org.chocosolver.parsers/org.chocosolver.parser.mps.ChocoMPS",
+            "projectName": "choco-parsers"
+        },
+        {
+            "type": "java",
+            "name": "ChocoXCSP",
+            "request": "launch",
+            "mainClass": "org.chocosolver.parsers/org.chocosolver.parser.xcsp.ChocoXCSP",
+            "projectName": "choco-parsers"
+        },
+        {
+            "type": "java",
+            "name": "TSP_exact",
+            "request": "launch",
+            "mainClass": "org.chocosolver.solver/org.chocosolver.solver.constraints.graph.cost.tsp.TSP_exact",
+            "projectName": "choco-solver"
+        },
+        {
+            "type": "java",
+            "name": "TSP_lns",
+            "request": "launch",
+            "mainClass": "org.chocosolver.solver/org.chocosolver.solver.constraints.graph.cost.tsp.TSP_lns",
+            "projectName": "choco-solver"
+        },
+        {
+            "type": "java",
+            "name": "PropEngineTest",
+            "request": "launch",
+            "mainClass": "org.chocosolver.solver/org.chocosolver.solver.propagation.PropEngineTest",
+            "projectName": "choco-solver"
+        },
+        {
+            "type": "java",
+            "name": "RecursiveSearchLoop",
+            "request": "launch",
+            "mainClass": "org.chocosolver.solver/org.chocosolver.solver.search.loop.RecursiveSearchLoop",
+            "projectName": "choco-solver"
+        },
+        {
+            "type": "java",
+            "name": "AirPlaneLanding",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.AirPlaneLanding",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "AllIntervalSeries",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.AllIntervalSeries",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "BACP",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.BACP",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "BIBD",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.BIBD",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "BinPacking",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.BinPacking",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "CarSequencing",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.CarSequencing",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "CumulativeSample",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.CumulativeSample",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "GolombRuler",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.GolombRuler",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Grocery",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.Grocery",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Knapsack",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.Knapsack",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Langford",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.Langford",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "LatinSquare",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.LatinSquare",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "MagicSequence",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.MagicSequence",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "MagicSquare",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.MagicSquare",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "MarioKart",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.MarioKart",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "MeetingScheduling",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.MeetingScheduling",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Nonogram",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.Nonogram",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Nonogram$GetImage",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.Nonogram$GetImage",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "OpenStacks",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.OpenStacks",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Ordering",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.Ordering",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "OrthoLatinSquare",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.OrthoLatinSquare",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Partition",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.Partition",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "RLFAP",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.RLFAP",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "SMPTSP",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.SMPTSP",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "SchurLemma",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.SchurLemma",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Semafor",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.Semafor",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "SendMoreMoney",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.SendMoreMoney",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "SocialGolfer",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.SocialGolfer",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "StableMarriage",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.StableMarriage",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Sudoku",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.Sudoku",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "TSP",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.TSP",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Takuzu",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.Takuzu",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "WarehouseLocation",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.WarehouseLocation",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Zebra",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.integer.Zebra",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "NQueenBinary",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.nqueen.NQueenBinary",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "NQueenBinaryGlobal",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.nqueen.NQueenBinaryGlobal",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "NQueenDualBinary",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.nqueen.NQueenDualBinary",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "NQueenDualGlobal",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.nqueen.NQueenDualGlobal",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "NQueenGlobal",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.nqueen.NQueenGlobal",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "NQueenLinearBinary",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.nqueen.NQueenLinearBinary",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "CycloHexan",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.real.CycloHexan",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "Grocery(1)",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.real.Grocery",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "HybridCycloHexan",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.real.HybridCycloHexan",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "SantaClaude",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.real.SantaClaude",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "SmallSantaClaude",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.real.SmallSantaClaude",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "AircraftLanding",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.tutorial.AircraftLanding",
+            "projectName": "examples"
+        },
+        {
+            "type": "java",
+            "name": "GolombRuler(1)",
+            "request": "launch",
+            "mainClass": "org.chocosolver.examples/org.chocosolver.examples.tutorial.GolombRuler",
+            "projectName": "examples"
+        }
+    ]
+}
