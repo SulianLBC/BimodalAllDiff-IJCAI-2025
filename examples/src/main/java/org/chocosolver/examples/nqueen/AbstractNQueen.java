@@ -23,17 +23,23 @@ import org.kohsuke.args4j.Option;
 public abstract class AbstractNQueen extends AbstractProblem {
 
     @Option(name = "-q", usage = "Number of queens.", required = false)
-    int n = 500;
+    int n = 600;
     IntVar[] vars;
 
     @Override
     public void configureSearch() {
         model.getSolver().setSearch(Search.minDomLBSearch(vars));
+//        model.getSolver().setSearch(Search.inputOrderLBSearch(vars));
     }
 
     @Override
     public void solve() {
         model.getSolver().showStatistics();
+        //model.getSolver().showDecisions();
+        //model.getSolver().showContradiction();
         model.getSolver().solve();
+//        for (IntVar var : vars) {
+//            System.out.println(var.getName() + " --> " + var.getValue());
+//        }
     }
 }

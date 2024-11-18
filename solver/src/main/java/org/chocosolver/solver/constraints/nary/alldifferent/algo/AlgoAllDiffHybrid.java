@@ -136,19 +136,46 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     //***********************************************************************************
 
     public boolean propagate() throws ContradictionException {
-        //System.out.println("============================================================");//DEBUG
-        //System.out.println("------------------------ Begin Node ------------------------");//DEBUG
-        updateUniverseOpening();
-        //System.out.println("Universes of variables: " + variablesDynamic);//DEBUG
-        //System.out.println("Universes of values: " + valuesDynamic + " and  " + complementSCC);//DEBUG
-        if (!findMaximumMatching()) {
-            vars[0].instantiateTo(vars[0].getLB()-1,aCause);
-        }
+//        System.out.println("============================================================");//DEBUG
+//        System.out.println("------------------------ Begin Node ------------------------");//DEBUG
+
         this.pruned = false;
-        filter();
-        updateUniverseEnding();
-        //System.out.println("------------------------- End Node -------------------------");//DEBUG
-        //System.out.println("============================================================");//DEBUG
+
+        updateDynamicStructuresOpening();
+//        System.out.println("Universes of variables: " + variablesDynamic);//DEBUG
+//        System.out.println("Universes of values: " + valuesDynamic + " and  " + complementSCC);//DEBUG
+//        System.out.println("Maximum matching before update:");//DEBUG
+//        System.out.println(matching);//DEBUG
+        boolean foundMatching = findMaximumMatching();
+        //System.out.println("Found a maximum matching: " + foundMatching);//DEBUG
+        if(foundMatching) {
+//            System.out.println("Maximum matching after update:");//DEBUG
+//            System.out.println(matching);//DEBUG
+//            System.out.println("The matching is correct: " + matching.isValid());//DEBUG
+//            System.out.println("The matching is maximum: " + matching.isMaximum());//DEBUG
+            filter();
+            updateDynamicStructuresEnding();
+        }
+
+        //DEBUG
+//        if (pruned) {
+//            System.out.println("Current instanciation:");
+//            for (IntVar var : vars) {
+//                if(var.isInstantiated()) {
+//                    System.out.println(var.getName() + " --> " + var.getValue());
+//                }
+//            }
+//        }
+
+
+//        System.out.println("------------------------- End Node -------------------------");//DEBUG
+//        System.out.println("============================================================");//DEBUG
+
+        else {
+//            System.out.println(matching);//DEBUG
+            vars[0].instantiateTo(vars[0].getLB() - 1, aCause);
+        }
+
         return this.pruned;
     }
 
@@ -162,10 +189,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         int var = variablesDynamic.getSource();
         while (variablesDynamic.hasNext(var)) { // We increase the size of the current matching until no unmatched variable remains
             var = variablesDynamic.getNext(var);
-            if (!matching.inMatchingU(var) || !vars[var].contains(matching.getMatchU(var))) {
-                if (matching.inMatchingU(var)) { // Repair the matching by deleting the pairs that were pruned outside the constraint
-                    matching.unMatch(var, matching.getMatchU(var));
-                }
+            if (!matching.inMatchingU(var)) {
                 valuesDynamic.refill();   // We refill the list with the recently removed elements, instead of recreating it from scratch
                 int val = augmentingPath(var);
                 if (val != fail) {
@@ -418,11 +442,12 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
             // The unique value of the SCC is necessarily matched, otherwise it would have been in the same SCC as t_node
             val = SCC.get(0);
             var = matching.getMatchV(val);
-            
+
+//            System.out.println("Pair instanciated: x_" + var + " -- " + val);//DEBUG
             vars[var].instantiateTo(val, aCause); //TODO: will the pruning also be managed by the Forward Checking ? Because it is not necessary, everything is done in the filtering procedure
             if (vars[var].getDomainSize() > 1) {this.pruned = true;} // TODO not clean
 
-            //System.out.println("Pair instanciated: x_" + var + " -- " + val);//DEBUG
+
 
 
             toRemoveFromVariableUniverse.addLast(var);
@@ -440,7 +465,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                             // Prune the pair (var, domainValue)
                             vars[var].removeValue(domainValue, aCause);
                             pruned = true;
-                            //System.out.println("Pair pruned: x_" + var + " -- " + domainValue);//DEBUG
+//                            System.out.println("Pair pruned: x_" + var + " -- " + domainValue);//DEBUG
                         }
                     }
 
@@ -452,7 +477,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                             // Prune the pair (var, complementValue)
                             vars[var].removeValue(complementValue, aCause);
                             pruned = true;
-                            //System.out.println("Pair pruned: x_" + var + " -- " + complementValue);//DEBUG
+//                            System.out.println("Pair pruned: x_" + var + " -- " + complementValue);//DEBUG
                         }
                     }
                 }
@@ -512,22 +537,33 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     //***********************************************************************************
 
 
-    private void updateUniverseOpening(){ // Here we detect the recently instanciated variables and remove them and their values from the universes of variables and values
+    private void updateDynamicStructuresOpening(){ // Here we detect the recently instanciated variables and remove them and their values from the universes of variables and values
         IEnvironment env = model.getEnvironment();
         int var  = variablesDynamic.getSource();
         while (variablesDynamic.hasNext(var)) {
             var = variablesDynamic.getNext(var);
             if (vars[var].isInstantiated()) {
-                variablesDynamic.removeFromUniverse(var, env);
-                if (valuesDynamic.isPresent(vars[var].getValue())) {
+                variablesDynamic.removeFromUniverse(var, env); // Update universe of variables
+
+                if (valuesDynamic.isPresent(vars[var].getValue())) { // Update universes of values
                     valuesDynamic.removeFromUniverse(vars[var].getValue(), env);
                     complementSCC.removeFromUniverse(vars[var].getValue(), env);
                 }
+
+                if (matching.inMatchingU(var)) { // Unmatch the instanciated variable from its current matched value
+                    matching.unMatch(var, matching.getMatchU(var));
+                }
+                if (matching.inMatchingV(vars[var].getValue())) { // Unmatch the value of the instanciated variable from its current matched variable
+                    matching.unMatch(matching.getMatchV(vars[var].getValue()), vars[var].getValue());
+                }
+                matching.setMatch(var, vars[var].getValue()); //Match the instanciated variable and its value together
+            } else if (matching.inMatchingU(var) && !vars[var].contains(matching.getMatchU(var))) { // Unmatch a variable from its matched value if it does not belong to the domain anymore
+                matching.unMatch(var, matching.getMatchU(var));
             }
         }
     }
 
-    private void updateUniverseEnding() { // Here we remove from the universes the variables and values detected during the filtering procedure
+    private void updateDynamicStructuresEnding() { // Here we remove from the universes the variables and values detected during the filtering procedure
         IEnvironment env = model.getEnvironment();
 
         // Manage the universe of variables
