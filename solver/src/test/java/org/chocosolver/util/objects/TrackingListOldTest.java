@@ -11,21 +11,22 @@ package org.chocosolver.util.objects;
 
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.*;
 
 /**
  * @author Sulian LE BOZEC-CHIFFOLEAU
  */
-public class TrackingListTest {
+public class TrackingListOldTest {
 
 
-    public TrackingList create() {
-        return new TrackingList(1, 10);
+    public TrackingListOld create() {
+        return new TrackingListOld(1, 10);
     }
 
     @Test(groups = "1s", timeOut=60000)
     public void testInitialState() {
-        TrackingList Tlist = create();
+        TrackingListOld Tlist = create();
+        assertEquals(Tlist.getUniverseSize(), 10);
         assertEquals(Tlist.getSize(), 10);
 
         // Traverse from left to right
@@ -55,7 +56,7 @@ public class TrackingListTest {
 
     @Test(groups = "1s", timeOut=60000)
     public void testRemoveAllAndRefill() {
-        TrackingList Tlist = create();
+        TrackingListOld Tlist = create();
 
         // Remove all
         int e = Tlist.getSource();
@@ -98,38 +99,75 @@ public class TrackingListTest {
         assertEquals(Tlist.isPresent(10), true);
     }
 
+    @Test(groups = "1s", timeOut=60000)
+    public void testTrackLeftRight() {
+        TrackingListOld Tlist = create();
+
+        Tlist.remove(5);
+        Tlist.remove(6);
+        assertEquals(Tlist.trackLeft(5), 4);
+        assertEquals(Tlist.trackRight(5), 7);
+        assertEquals(Tlist.trackLeft(6), 4);
+        assertEquals(Tlist.trackRight(6), 7);
+        assertEquals(Tlist.trackLeft(7), 7);
+        assertEquals(Tlist.trackRight(7), 7);
+
+        assertEquals(Tlist.isPresent(5), false);
+        assertEquals(Tlist.isPresent(6), false);
+
+        Tlist.reinsertLastRemoved();
+        assertEquals(Tlist.trackLeft(5), 4);
+        assertEquals(Tlist.trackRight(5), 6);
+        assertEquals(Tlist.trackLeft(6), 6);
+        assertEquals(Tlist.trackRight(6), 6);
+        assertEquals(Tlist.trackLeft(7), 7);
+        assertEquals(Tlist.trackRight(7), 7);
+
+        assertEquals(Tlist.isPresent(5), false);
+        assertEquals(Tlist.isPresent(6), true);
+
+        Tlist.reinsertLastRemoved();
+
+        assertEquals(Tlist.isPresent(5), true);
+        assertEquals(Tlist.isPresent(6), true);
+    }
 
     @Test(groups = "1s", timeOut=60000)
-    public void testRemoveAllAndRefillRandomOrder() {
-        TrackingList Tlist = create();
+    public void testRemoveUniverseAndRefill() {
+        TrackingListOld Tlist = create();
 
-        // Remove all
-        Tlist.remove(5);
-        Tlist.remove(3);
-        Tlist.remove(9);
-        Tlist.remove(7);
-        Tlist.remove(6);
-        Tlist.remove(10);
-        Tlist.remove(2);
-        Tlist.remove(8);
-        Tlist.remove(1);
-        Tlist.remove(4);
+        Tlist.removeFromUniverse(4);
+        assertEquals(Tlist.getSize(), 9);
+        assertEquals(Tlist.getUniverseSize(), 9);
+        assertEquals(Tlist.trackLeft(4), 3);
+        assertEquals(Tlist.trackRight(4), 5);
 
-
-        assertEquals(Tlist.getNext(Tlist.getSource()), Tlist.getSink());
-        assertEquals(Tlist.getPrevious(Tlist.getSink()), Tlist.getSource());
-        assertEquals(Tlist.getSize(), 0);
-        assertEquals(Tlist.isEmpty(), true);
-
-        for(int i = 1; i <= 10; i++) {
-            assertEquals(Tlist.isPresent(i), false);
-            assertEquals(Tlist.trackLeft(i), Tlist.getSource());
-        }
-
-        // Refill
-        Tlist.refill();
+        Tlist.reinsertLastRemovedUniverse();
         assertEquals(Tlist.getSize(), 10);
-        assertEquals(Tlist.isEmpty(), false);
+        assertEquals(Tlist.getUniverseSize(), 10);
+        assertEquals(Tlist.trackLeft(4), 4);
+        assertEquals(Tlist.trackRight(4), 4);
+
+        Tlist.removeFromUniverse(1);
+        Tlist.removeFromUniverse(2);
+        Tlist.removeFromUniverse(3);
+        Tlist.removeFromUniverse(5);
+        assertEquals(Tlist.getSize(), 6);
+        assertEquals(Tlist.getUniverseSize(), 6);
+
+        Tlist.remove(4);
+        Tlist.remove(8);
+        assertEquals(Tlist.getSize(), 4);
+        assertEquals(Tlist.getUniverseSize(), 6);
+
+        Tlist.refill();
+        assertEquals(Tlist.getSize(), 6);
+        assertEquals(Tlist.getUniverseSize(), 6);
+
+        Tlist.refillUniverse();
+        assertEquals(Tlist.getUniverseSize(), 10);
+        assertEquals(Tlist.getSize(), 10);
+
 
         // Traverse from left to right
         int e = Tlist.getSource();
@@ -153,63 +191,6 @@ public class TrackingListTest {
 
         assertEquals(Tlist.isPresent(1), true);
         assertEquals(Tlist.isPresent(5), true);
-        assertEquals(Tlist.isPresent(10), true);
-    }
-
-
-    @Test(groups = "1s", timeOut=60000)
-    public void testTrackLeftRight() {
-        TrackingList Tlist = create();
-
-        Tlist.remove(5);
-        Tlist.remove(6);
-        assertEquals(Tlist.trackLeft(5), 4);
-        assertEquals(Tlist.trackLeft(6), 4);
-        assertEquals(Tlist.trackLeft(7), 7);
-
-        assertEquals(Tlist.isPresent(5), false);
-        assertEquals(Tlist.isPresent(6), false);
-
-        Tlist.refill();
-        Tlist.remove(5);
-
-        assertEquals(Tlist.trackLeft(5), 4);
-        assertEquals(Tlist.trackLeft(6), 6);
-        assertEquals(Tlist.trackLeft(7), 7);
-
-        assertEquals(Tlist.isPresent(5), false);
-        assertEquals(Tlist.isPresent(6), true);
-
-        Tlist.refill();
-
-        assertEquals(Tlist.isPresent(5), true);
-        assertEquals(Tlist.isPresent(6), true);
-    }
-
-    @Test(groups = "1s", timeOut=60000)
-    public void testRemoveUniverse() {
-        TrackingList Tlist = create();
-
-        Tlist.removeFromUniverse(4);
-        assertEquals(Tlist.getSize(), 9);
-        assertEquals(Tlist.trackLeft(4), 3);
-
-        Tlist.removeFromUniverse(1);
-        Tlist.removeFromUniverse(2);
-        Tlist.removeFromUniverse(3);
-        Tlist.removeFromUniverse(5);
-        assertEquals(Tlist.getSize(), 5);;
-
-        Tlist.remove(8);
-        assertEquals(Tlist.isPresent(8), false);
-        assertEquals(Tlist.getSize(), 4);
-
-        Tlist.refill();
-        assertEquals(Tlist.isPresent(8), true);
-        assertEquals(Tlist.getSize(), 5);
-
-        assertEquals(Tlist.isPresent(1), false);
-        assertEquals(Tlist.isPresent(5), false);
         assertEquals(Tlist.isPresent(10), true);
     }
 }
