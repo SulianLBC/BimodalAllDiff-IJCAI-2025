@@ -49,10 +49,11 @@ public class NQueenDualGlobal extends AbstractNQueen {
             model.arithm(dualdiag1[i], "=", dualvars[i], "+", i).post();
             model.arithm(dualdiag2[i], "=", dualvars[i], "-", i).post();
         }
-        model.allDifferent(diag1, "BC").post();
-        model.allDifferent(diag2, "BC").post();
-        model.allDifferent(dualdiag1, "BC").post();
-        model.allDifferent(dualdiag2, "BC").post();
+        String consistency = "AC_TUNED";
+        model.allDifferent(diag1, consistency).post();
+        model.allDifferent(diag2, consistency).post();
+        model.allDifferent(dualdiag1, consistency).post();
+        model.allDifferent(dualdiag2, consistency).post();
 
         model.inverseChanneling(vars, dualvars, 1, 1).post();
     }

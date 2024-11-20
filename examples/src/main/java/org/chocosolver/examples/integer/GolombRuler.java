@@ -33,7 +33,7 @@ public class GolombRuler extends AbstractProblem {
 
     @SuppressWarnings("FieldMayBeFinal")
     @Option(name = "-m", usage = "Golomb ruler order.", required = false)
-    private int m = 10;
+    private int m = 12;
 
     IntVar[] ticks;
     IntVar[] diffs;
@@ -64,7 +64,7 @@ public class GolombRuler extends AbstractProblem {
                 m_diffs[i][j] = diffs[k];
             }
         }
-        model.allDifferent(diffs, "BC").post();
+        model.allDifferent(diffs, "AC_ZHANG").post();
 
         // break symetries
         if (m > 2) {
@@ -83,6 +83,9 @@ public class GolombRuler extends AbstractProblem {
         while (model.getSolver().solve()) {
             out.println("New solution found : " + model.getVars()[m - 1]);
         }
+        System.out.println("Number of nodes: " + model.getSolver().getNodeCount());
+        System.out.println("Time to best solution: " + model.getSolver().getTimeToBestSolution() + "s");
+        System.out.println("Time count: " + model.getSolver().getTimeCount() + "s");
     }
 
     public static void main(String[] args) {

@@ -19,13 +19,13 @@ import static org.testng.Assert.*;
 public class TrackingListTest {
 
 
-    public TrackingList create() {
-        return new TrackingList(1, 10);
+    public TrackingListOld create() {
+        return new TrackingListOld(1, 10);
     }
 
     @Test(groups = "1s", timeOut=60000)
     public void testInitialState() {
-        TrackingList Tlist = create();
+        TrackingListOld Tlist = create();
         assertEquals(Tlist.getUniverseSize(), 10);
         assertEquals(Tlist.getSize(), 10);
 
@@ -56,7 +56,7 @@ public class TrackingListTest {
 
     @Test(groups = "1s", timeOut=60000)
     public void testRemoveAllAndRefill() {
-        TrackingList Tlist = create();
+        TrackingListOld Tlist = create();
 
         // Remove all
         int e = Tlist.getSource();
@@ -101,7 +101,7 @@ public class TrackingListTest {
 
     @Test(groups = "1s", timeOut=60000)
     public void testTrackLeftRight() {
-        TrackingList Tlist = create();
+        TrackingListOld Tlist = create();
 
         Tlist.remove(5);
         Tlist.remove(6);
@@ -134,7 +134,7 @@ public class TrackingListTest {
 
     @Test(groups = "1s", timeOut=60000)
     public void testRemoveUniverseAndRefill() {
-        TrackingList Tlist = create();
+        TrackingListOld Tlist = create();
 
         Tlist.removeFromUniverse(4);
         assertEquals(Tlist.getSize(), 9);

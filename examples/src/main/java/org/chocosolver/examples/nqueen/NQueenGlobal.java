@@ -35,10 +35,10 @@ public class NQueenGlobal extends AbstractNQueen {
             diag1[i] = model.offset(vars[i], i);
             diag2[i] = model.offset(vars[i], -i);
         }
-
-        model.allDifferent(vars, "BC").post();
-        model.allDifferent(diag1, "BC").post();
-        model.allDifferent(diag2, "BC").post();
+        String consistency = "AC_ZHANG";
+        model.allDifferent(vars, consistency).post();
+        model.allDifferent(diag1, consistency).post();
+        model.allDifferent(diag2, consistency).post();
     }
 
     @Override

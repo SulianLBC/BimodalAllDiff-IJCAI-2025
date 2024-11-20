@@ -30,7 +30,7 @@ public class NQueenBinaryGlobal extends AbstractNQueen {
             vars[i] = model.intVar("Q_" + i, 1, n, false);
         }
 
-        model.allDifferent(vars, "AC_ZHANG").post();
+        model.allDifferent(vars, "BC").post();
         for (int i = 0; i < n - 1; i++) {
             for (int j = i + 1; j < n; j++) {
                 int k = j - i;
