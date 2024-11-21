@@ -174,15 +174,15 @@ public class Flatzinc extends RegParser {
                                     "\t\"policy\": \"%s\",\n" +
                                     "\t\"parsing time\": %.3f,\n" +
                                     "\t\"building time\": %.3f,\n" +
-                                    "\t\"memory\": %d,\n" +
+//                                    "\t\"memory\": %d,\n" +
                                     "\t\"stats\":[",
                             instance,
                             m.getNbVars(),
                             m.getNbCstrs(),
                             m.getSolver().getObjectiveManager().getPolicy(),
                             (ptime + System.currentTimeMillis()) / 1000f,
-                            s.getReadingTimeCount(),
-                            m.getEstimatedMemory()
+                            s.getReadingTimeCount()
+//                            m.getEstimatedMemory()
                             );
                 }
             } catch (IOException e) {

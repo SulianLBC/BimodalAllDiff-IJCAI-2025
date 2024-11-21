@@ -14,7 +14,6 @@ import org.chocosolver.solver.Model;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.objects.BipartiteMatching;
-import org.chocosolver.util.objects.IntCircularQueue;
 import org.chocosolver.util.objects.TrackingList;
 import org.chocosolver.memory.IEnvironment;
 
@@ -57,7 +56,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     private int headBFS;
     private int tailBFS;
     private final int t_node; // Symbol representing the artificial sink node of the Residual Graph
-    private TrackingList complementSCC; // List of the values that are not in SCC
+    private TrackingList complementSCC; // List of the values that are not in the discovered SCC
     private int[] tarjanStack;  // The stack used in Tarjan's algorithm to find the SCCs
     private int topTarjan;
     private boolean[] inStack; // Boolean array informing the presence of a value in the stack
@@ -67,10 +66,10 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     private boolean atLeastTwo; // True if there are potentially two SCCs
     private String mode; // Indicating the mode in which we are using the procedure (Classic, Complement, Hybrid or Tuned)
     private boolean pruned; // True if some variable-value pairs were pruned
-    private long timeMatchingNano;
-    private long timeSCCNano;
-    private long timePruneNano;
-    private long timeTotalNano;
+//    private long timeMatchingNano;
+//    private long timeSCCNano;
+//    private long timePruneNano;
+//    private long timeTotalNano;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -198,16 +197,16 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
 
                     valuesDynamic.refill(); // valuesDynamic is a backtrackable TrackingList, we must refill it to avoid breaking its structure during the backtrack 
 
-                    timeMatchingNano += System.nanoTime() - timeStart;
-                    timeTotalNano += System.nanoTime() - timeStart;
+//                    timeMatchingNano += System.nanoTime() - timeStart;
+//                    timeTotalNano += System.nanoTime() - timeStart;
                     return false;
                 }
             }
         }
         valuesDynamic.refill(); // valuesDynamic is a global variable used in the whole filtering procedure, so we must refill it
 
-        timeMatchingNano += System.nanoTime() - timeStart;
-        timeTotalNano += System.nanoTime() - timeStart;
+//        timeMatchingNano += System.nanoTime() - timeStart;
+//        timeTotalNano += System.nanoTime() - timeStart;
         return true;
     }
 
@@ -290,8 +289,8 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         //System.out.println("Check the list of unvisited values after the filtering: " + valuesDynamic);//DEBUG
 
         // Time monitoring
-        timeSCCNano += System.nanoTime() - timeStart;
-        timeTotalNano += System.nanoTime() - timeStart;
+//        timeSCCNano += System.nanoTime() - timeStart;
+//        timeTotalNano += System.nanoTime() - timeStart;
     }
 
     private void hyDFS(int var) throws ContradictionException {
@@ -317,15 +316,20 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         } else { // If var has a large domain then iterate over the unvisited values and over the values in Tarjan's stack
 
             // ======================= Step 1: explore the non-visited values =======================
-            int pointerVar = valuesDynamic.getSource();
+//            int pointerVar = valuesDynamic.getSource();
+            int pointerVar = valuesDynamic.getPrevious(vars[var].getLB()); //Optimisation
+            int var_ub = vars[var].getUB(); //Optimisation
             //System.out.println("Ensure the source is not in the domain of var: " + vars[var].contains(pointerVar));//DEBUG
-            while (valuesDynamic.hasNext(pointerVar)) { // Explore all the branches going out of var in the DFS tree
+            while (valuesDynamic.hasNext(pointerVar) && pointerVar < var_ub) { // Explore all the branches going out of var in the DFS tree
                 pointerVar = valuesDynamic.trackLeft(pointerVar); // Go back in the list of unvisited values
-                while(valuesDynamic.hasNext(pointerVar) && !vars[var].contains(valuesDynamic.getNext(pointerVar))) { // Go to the last consecutive non-domain value
+                while(valuesDynamic.hasNext(pointerVar) && pointerVar < var_ub && !vars[var].contains(valuesDynamic.getNext(pointerVar))) { // Go to the last consecutive non-domain value
                     pointerVar = valuesDynamic.getNext(pointerVar);
                 }
                 //System.out.println("Ensure pointerVar is not in the domain of var: " + vars[var].contains(pointerVar));//DEBUG
-                if (valuesDynamic.hasNext(pointerVar)) {process(var, valuesDynamic.getNext(pointerVar));} // If we did not reach the end of the list of unvisited values, the next value is a domain value
+                if (valuesDynamic.hasNext(pointerVar) && pointerVar < var_ub) {// If we did not reach the end of the list of unvisited values, the next value is a domain value
+                    process(var, valuesDynamic.getNext(pointerVar));
+                    var_ub = vars[var].getUB(); //Optimisation
+                }
             }
 
             // ======================= Step 2 : update M(var).low thanks to the most ancient visited and unassigned value =======================
@@ -427,8 +431,8 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
 
         topTarjan = rootIndex; // Remove the discovered SCC from Tarjan's stack
 
-        timePruneNano += System.nanoTime() - timeStart;
-        timeSCCNano -= System.nanoTime() - timeStart;
+//        timePruneNano += System.nanoTime() - timeStart;
+//        timeSCCNano -= System.nanoTime() - timeStart;
     }
 
     //***********************************************************************************
@@ -585,11 +589,11 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     //***********************************************************************************
 
 
-    public long getTimeMatchingNanoSeconds() {return timeMatchingNano;}
-
-    public long getTimeSCCNanoSeconds() {return timeSCCNano;}
-
-    public long getTimePruneNanoSeconds() {return timePruneNano;}
-
-    public long getTimeTotalNanoSeconds() {return timeTotalNano;}
+//    public long getTimeMatchingNanoSeconds() {return timeMatchingNano;}
+//
+//    public long getTimeSCCNanoSeconds() {return timeSCCNano;}
+//
+//    public long getTimePruneNanoSeconds() {return timePruneNano;}
+//
+//    public long getTimeTotalNanoSeconds() {return timeTotalNano;}
 }

@@ -119,6 +119,7 @@ public class TrackingListTest {
         assertEquals(Tlist.getNext(Tlist.getSource()), Tlist.getSink());
         assertEquals(Tlist.getPrevious(Tlist.getSink()), Tlist.getSource());
         assertEquals(Tlist.getSize(), 0);
+        assertEquals(Tlist.getUniverseSize(), 10);
         assertEquals(Tlist.isEmpty(), true);
 
         for(int i = 1; i <= 10; i++) {
@@ -129,6 +130,7 @@ public class TrackingListTest {
         // Refill
         Tlist.refill();
         assertEquals(Tlist.getSize(), 10);
+        assertEquals(Tlist.getUniverseSize(), 10);
         assertEquals(Tlist.isEmpty(), false);
 
         // Traverse from left to right
@@ -192,6 +194,7 @@ public class TrackingListTest {
 
         Tlist.removeFromUniverse(4);
         assertEquals(Tlist.getSize(), 9);
+        assertEquals(Tlist.getUniverseSize(), 9);
         assertEquals(Tlist.trackLeft(4), 3);
 
         Tlist.removeFromUniverse(1);
@@ -199,14 +202,17 @@ public class TrackingListTest {
         Tlist.removeFromUniverse(3);
         Tlist.removeFromUniverse(5);
         assertEquals(Tlist.getSize(), 5);;
+        assertEquals(Tlist.getUniverseSize(), 5);
 
         Tlist.remove(8);
         assertEquals(Tlist.isPresent(8), false);
         assertEquals(Tlist.getSize(), 4);
+        assertEquals(Tlist.getUniverseSize(), 5);
 
         Tlist.refill();
         assertEquals(Tlist.isPresent(8), true);
         assertEquals(Tlist.getSize(), 5);
+        assertEquals(Tlist.getUniverseSize(), 5);
 
         assertEquals(Tlist.isPresent(1), false);
         assertEquals(Tlist.isPresent(5), false);

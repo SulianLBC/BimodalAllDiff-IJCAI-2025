@@ -57,6 +57,8 @@ public class TrackingList {
 
     public int getSize() {return universeSize - topRemoved;}
 
+    public int getUniverseSize() {return universeSize;}
+
     /**
      * Returns the next element in the in-list
      * Starts by converting the element into its equivalent index and then gets the next index in the in-list
