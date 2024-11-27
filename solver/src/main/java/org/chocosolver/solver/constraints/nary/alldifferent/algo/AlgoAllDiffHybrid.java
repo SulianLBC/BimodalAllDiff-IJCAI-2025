@@ -365,6 +365,10 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         }
     }
 
+
+    /**
+     * In this function we prune all the arcs coming from the variables of the discovered SCC and pointing toward valyes outside the discovered SCC
+     */
     private void prune(int root) throws ContradictionException {
         long timeStart = System.nanoTime();
         atLeastTwo = true;
@@ -376,12 +380,19 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
          * ======================= Step 1 : Get all the values of the discovered SCC and construct the complement =======================
         */
 
+        // We will use the max and min values in the SCC to update the lower and upper bounds of the variables in this SCC
+        int minValueSCC = maxValue;
+        int maxValueSCC = minValue;
+
+
         int rootIndex = topTarjan;
         do {
             rootIndex--;
             val = tarjanStack[rootIndex];
             declareInStack(val, false);
             complementSCC.remove(val);
+            minValueSCC = Math.min(val, minValueSCC);
+            maxValueSCC = Math.max(val, maxValueSCC);
         } while (val != root && rootIndex != 0);
 
         /**
@@ -403,28 +414,35 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
             val = tarjanStack[index];
             if (matching.inMatchingV(val)) {
                 var = matching.getMatchV(val);
-                if (choicePrune(var)) {  // If var has a small domain then iterate over the domain and prune the values that are in the complement
-                    int ub = vars[var].getUB();
-                    for (int domainValue = vars[var].getLB(); domainValue <= ub; domainValue = vars[var].nextValue(domainValue)) {
-                        if (complementSCC.isPresent(domainValue)) {
-                            // Prune the pair (var, domainValue)
-                            vars[var].removeValue(domainValue, aCause);
-                            pruned = true;
+
+                vars[var].updateBounds(minValueSCC, maxValueSCC, aCause); // All values outside [minValueSCC, maxValueSCC] can not be present in the discovered SCC, and thus are pruned from the domain of every variable of the SCC
+
+                if (vars[var].getDomainSize() > 1) { // If the domain is a singleton there is nothing to prune
+
+                    if (choicePrune(var)) {  // If var has a small domain then iterate over the domain and prune the values that are in the complement
+                        int ub = vars[var].getUB();
+                        for (int domainValue = vars[var].getLB(); domainValue <= ub; domainValue = vars[var].nextValue(domainValue)) {
+                            if (complementSCC.isPresent(domainValue)) {
+                                // Prune the pair (var, domainValue)
+                                vars[var].removeValue(domainValue, aCause);
+                                pruned = true;
 //                            System.out.println("Pair pruned: x_" + var + " -- " + domainValue);//DEBUG
+                            }
+                        }
+
+                    } else {    // If var has a large domain then iterate over the values in the complement and prune the ones that are in the domain of var
+                        int complementValue = complementSCC.getSource();
+                        while (complementSCC.hasNext(complementValue)) {
+                            complementValue = complementSCC.getNext(complementValue);
+                            if (vars[var].contains(complementValue)) {
+                                // Prune the pair (var, complementValue)
+                                vars[var].removeValue(complementValue, aCause);
+                                pruned = true;
+//                            System.out.println("Pair pruned: x_" + var + " -- " + complementValue);//DEBUG
+                            }
                         }
                     }
 
-                } else {    // If var has a large domain then iterate over the values in the complement and prune the ones that are in the domain of var
-                    int complementValue = complementSCC.getSource();
-                    while(complementSCC.hasNext(complementValue)) {
-                        complementValue = complementSCC.getNext(complementValue);
-                        if (vars[var].contains(complementValue)) {
-                            // Prune the pair (var, complementValue)
-                            vars[var].removeValue(complementValue, aCause);
-                            pruned = true;
-//                            System.out.println("Pair pruned: x_" + var + " -- " + complementValue);//DEBUG
-                        }
-                    }
                 }
             }
         }
@@ -449,12 +467,12 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         while (variablesDynamic.hasNext(var)) {
             var = variablesDynamic.getNext(var);
             if (vars[var].isInstantiated()) {
-                variablesDynamic.removeFromUniverse(var, env); // The instanciated variables are removed from the universe
-
-                if (valuesDynamic.isPresent(vars[var].getValue())) { // The values of the instanciated variables are removed from the universe
-                    valuesDynamic.removeFromUniverse(vars[var].getValue(), env);
-                    complementSCC.removeFromUniverse(vars[var].getValue(), env);
-                }
+//                variablesDynamic.removeFromUniverse(var, env); // The instanciated variables are removed from the universe
+//
+//                if (valuesDynamic.isPresent(vars[var].getValue())) { // The values of the instanciated variables are removed from the universe
+//                    valuesDynamic.removeFromUniverse(vars[var].getValue(), env);
+//                    complementSCC.removeFromUniverse(vars[var].getValue(), env);
+//                }
 
                 if (matching.inMatchingU(var)) { // Unmatch the instanciated variable from its current matched value
                     matching.unMatch(var, matching.getMatchU(var));
@@ -472,7 +490,9 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     private void updateDynamicStructuresEnding() {
         IEnvironment env = model.getEnvironment();
 
-        // The remaining unvisited values are present in the domain of no variables, thus we can remove them from the universe of values for the next call to the propagator
+        /**
+         * The remaining unvisited values are present in the domain of no variables, thus we can remove them from the universe of values for the next call to the propagator
+          */
         int val = valuesDynamic.getSource();
         while (valuesDynamic.hasNext(val)) {
             val = valuesDynamic.getNext(val);
@@ -489,6 +509,22 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
             complementSCC.removeFromUniverse(tarjanStack[topTarjan - 1], env);
             topTarjan--;
         }
+
+        /**
+         * Now that the pruning is done, we can remove from the universes of variables and values the pairs that were instanciated either before or during the call to this propagator
+         */
+        int var  = variablesDynamic.getSource();
+        while (variablesDynamic.hasNext(var)) {
+            var = variablesDynamic.getNext(var);
+            if (vars[var].isInstantiated()) {
+                // The instanciated variables are removed from the universe
+                variablesDynamic.removeFromUniverse(var, env);
+
+                // The values of the instanciated variables are removed from the universe
+                valuesDynamic.removeFromUniverse(vars[var].getValue(), env);
+                complementSCC.removeFromUniverse(vars[var].getValue(), env);
+            }
+        }
     }
 
     //***********************************************************************************
@@ -504,9 +540,11 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
             case COMPLEMENT:
                 return false;
             case HYBRID:
-                return vars[var].getDomainSize() < valuesDynamic.getSize();
+//                return vars[var].getDomainSize() < valuesDynamic.getSize();
+                return vars[var].getUB() - vars[var].getLB() < valuesDynamic.getSize(); // More suited to BitSet domain representation
             case TUNED:
-                return vars[var].getDomainSize() < valuesDynamic.getSize();
+//                return vars[var].getDomainSize() < valuesDynamic.getSize();
+                return vars[var].getUB() - vars[var].getLB() < valuesDynamic.getSize(); // More suited to BitSet domain representation
             default:
                 return true;
         }
@@ -520,9 +558,11 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
             case COMPLEMENT:
                 return false;
             case HYBRID:
-                return vars[var].getDomainSize() < valuesDynamic.getSize();
+//                return vars[var].getDomainSize() < valuesDynamic.getSize();
+                return vars[var].getUB() - vars[var].getLB() < valuesDynamic.getSize(); // More suited to BitSet domain representation
             case TUNED:
-                return vars[var].getDomainSize() < Math.sqrt(valuesDynamic.getSize());
+//                return vars[var].getDomainSize() < Math.sqrt(valuesDynamic.getSize());
+                return vars[var].getUB() - vars[var].getLB() < Math.sqrt(valuesDynamic.getSize());  // More suited to BitSet domain representation
             default:
                 return true;
         }
@@ -535,9 +575,11 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
             case COMPLEMENT:
                 return false;
             case HYBRID:
-                return vars[var].getDomainSize() < complementSCC.getSize();
+//                return vars[var].getDomainSize() < complementSCC.getSize();
+                return vars[var].getUB() - vars[var].getLB() < complementSCC.getSize(); // More suited to BitSet domain representation
             case TUNED:
-                return vars[var].getDomainSize() < complementSCC.getSize();
+//                return vars[var].getDomainSize() < complementSCC.getSize();
+                return vars[var].getUB() - vars[var].getLB() < complementSCC.getSize(); // More suited to BitSet domain representation
             default:
                 return true;
         }

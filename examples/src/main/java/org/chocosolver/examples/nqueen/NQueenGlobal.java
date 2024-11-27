@@ -13,6 +13,7 @@ package org.chocosolver.examples.nqueen;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.IntVar;
 
+import static org.chocosolver.solver.search.strategy.Search.failureLengthBasedSearch;
 import static org.chocosolver.solver.search.strategy.Search.minDomLBSearch;
 
 /**
@@ -35,7 +36,7 @@ public class NQueenGlobal extends AbstractNQueen {
             diag1[i] = model.offset(vars[i], i);
             diag2[i] = model.offset(vars[i], -i);
         }
-        String consistency = "AC_COMPLEMENT";
+        String consistency = "AC_ZHANG";
         model.allDifferent(vars, consistency).post();
         model.allDifferent(diag1, consistency).post();
         model.allDifferent(diag2, consistency).post();
@@ -43,7 +44,7 @@ public class NQueenGlobal extends AbstractNQueen {
 
     @Override
     public void configureSearch() {
-        model.getSolver().setSearch(minDomLBSearch(vars));
+        model.getSolver().setSearch(minDomLBSearch());
     }
 
     public static void main(String[] args) {
