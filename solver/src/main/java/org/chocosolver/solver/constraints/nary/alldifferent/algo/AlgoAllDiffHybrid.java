@@ -63,8 +63,8 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     private int[] pre; // Pre visit order of the values
     private int[] low; // Low point of the values
     private int numVisit; // Current visit number of the DFS in Tarjan's algorithm
-    private boolean atLeastTwo; // True if there are potentially two SCCs
-    private String mode; // Indicating the mode in which we are using the procedure (Classic, Complement, Hybrid or Tuned)
+    private boolean firstSCC; // Indicates if the discovered SCC is the first discovered one in the current propagation
+    private final String mode; // Indicating the mode in which we are using the procedure (Classic, Complement, Hybrid or Tuned)
     private boolean pruned; // True if some variable-value pairs were pruned
 //    private long timeMatchingNano;
 //    private long timeSCCNano;
@@ -85,8 +85,8 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
         int tempMinValue = vars[0].getLB();
         int tempMaxValue = vars[0].getUB();
         for (IntVar x : vars) {
-            tempMinValue = tempMinValue < x.getLB() ? tempMinValue : x.getLB();
-            tempMaxValue = tempMaxValue > x.getUB() ? tempMaxValue : x.getUB();
+            tempMinValue = Math.min(tempMinValue, x.getLB());
+            tempMaxValue = Math.max(tempMaxValue, x.getUB());
         }
         this.minValue = tempMinValue;
         this.maxValue = tempMaxValue;
@@ -138,7 +138,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
 
         this.pruned = false;
 
-        updateDynamicStructuresOpening();
+        updateDynamicStructuresOpening(true);
 //        System.out.println("Universes of variables: " + variablesDynamic);//DEBUG
 //        System.out.println("Universes of values: " + valuesDynamic + " and  " + complementSCC);//DEBUG
 //        System.out.println("Maximum matching before update:");//DEBUG
@@ -182,7 +182,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
 
 
     private boolean findMaximumMatching(){
-        long timeStart = System.nanoTime();
+//        long timeStart = System.nanoTime();
         int var = variablesDynamic.getSource();
         while (variablesDynamic.hasNext(var)) { // We increase the size of the current matching until no unmatched variable remains
             var = variablesDynamic.getNext(var);
@@ -265,9 +265,9 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     //***********************************************************************************
 
     private void filter() throws ContradictionException {
-        long timeStart = System.nanoTime();
+//        long timeStart = System.nanoTime();
         this.numVisit = 1;
-        this.atLeastTwo = false;
+        this.firstSCC = true;
         int var = variablesDynamic.getSource();
 
         //System.out.println("Check the list of unvisited values before the filtering: " + valuesDynamic);//DEBUG
@@ -278,13 +278,13 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                 hyDFS(var);
             }
         }
-        if (atLeastTwo && topTarjan != 0) {prune(t_node);} // If there is only one SCC, no pruning is possible so there is no point to call the Prune procedure.
+        if (topTarjan != 0) {prune(t_node);} // If the artificial node t_node is alone, no pruning is possible and the structures tarjanStack and inStack are already cleared.
 
         // Clear Tarjan's stack in case the prune method was not called above
-        while(topTarjan != 0) {
-            declareInStack(tarjanStack[topTarjan - 1], false);
-            topTarjan--;
-        }
+//        while(topTarjan != 0) {
+//            declareInStack(tarjanStack[topTarjan - 1], false);
+//            topTarjan--;
+//        }
         
         //System.out.println("Check the list of unvisited values after the filtering: " + valuesDynamic);//DEBUG
 
@@ -310,7 +310,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                 if (val != matching.getMatchU(var) && valuesDynamic.isPresent(val)) {process(var, val);}
 
                 // ======================= Case 2 :  update M(var).low via an already visited and unassigned value =======================
-                else if (val != matching.getMatchU(var) && isInStack(val)) {setLow(matching.getMatchU(var), min(getLow(matching.getMatchU(var)), getPre(val)));} // M(var).low = min(M(var).low, val.pre)
+                else if (val != matching.getMatchU(var) && isInStack(val)) {setLow(matching.getMatchU(var), Math.min(getLow(matching.getMatchU(var)), getPre(val)));} // M(var).low = min(M(var).low, val.pre)
             }
 
         } else { // If var has a large domain then iterate over the unvisited values and over the values in Tarjan's stack
@@ -336,7 +336,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
             for (int index = 0; index < topTarjan; index++) { // Iterate over tarjan's stack from the bottom until you find a value in the domain of var, or until it is not possible to decrease M(var).low
                 val = tarjanStack[index];
                 if (vars[var].contains(val) || getPre(val) >= getLow(matching.getMatchU(var))) {
-                    setLow(matching.getMatchU(var), min(getLow(matching.getMatchU(var)), getPre(val))); // M(var).low = min(M(var).low, val.pre)
+                    setLow(matching.getMatchU(var), Math.min(getLow(matching.getMatchU(var)), getPre(val))); // M(var).low = min(M(var).low, val.pre)
                     break;
                 }
             }
@@ -352,7 +352,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     private void process(int var, int val) throws ContradictionException {
         if (matching.inMatchingV(val)) {    // If the value is already matched, we continue the exploration from its matched variable
             hyDFS(matching.getMatchV(val));
-            setLow(matching.getMatchU(var), min(getLow(matching.getMatchU(var)), getLow(val))); // M(var).low = min(M(var).low, val.low)
+            setLow(matching.getMatchU(var), Math.min(getLow(matching.getMatchU(var)), getLow(val))); // M(var).low = min(M(var).low, val.low)
         } else {    // If the value is not matched it leads to the artificial node t_node, so we artificially explore it
             setPre(val, numVisit);
             setLow(val, 0);
@@ -370,8 +370,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
      * In this function we prune all the arcs coming from the variables of the discovered SCC and pointing toward valyes outside the discovered SCC
      */
     private void prune(int root) throws ContradictionException {
-        long timeStart = System.nanoTime();
-        atLeastTwo = true;
+//        long timeStart = System.nanoTime();
         complementSCC.refill();
         int var;
         int val;
@@ -406,46 +405,54 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
             var = matching.getMatchV(val);
 
 //            System.out.println("Pair instanciated: x_" + var + " -- " + val);//DEBUG
-            vars[var].instantiateTo(val, aCause); //TODO: will the pruning also be managed by the Forward Checking ? Because it is not necessary, everything is done in the filtering procedure
-            if (vars[var].getDomainSize() > 1) {this.pruned = true;} // TODO not clean
+            if (vars[var].getDomainSize() > 1) {pruned = true;}
+            vars[var].instantiateTo(val, aCause);
+
         }
 
-        for (int index = rootIndex; index < topTarjan; index++) {
-            val = tarjanStack[index];
-            if (matching.inMatchingV(val)) {
-                var = matching.getMatchV(val);
+        if (!firstSCC) { // Run the pruning procedure only if it is not the first SCC discovered
 
-                vars[var].updateBounds(minValueSCC, maxValueSCC, aCause); // All values outside [minValueSCC, maxValueSCC] can not be present in the discovered SCC, and thus are pruned from the domain of every variable of the SCC
+            for (int index = rootIndex; index < topTarjan; index++) {
+                val = tarjanStack[index];
+                if (matching.inMatchingV(val)) {
+                    var = matching.getMatchV(val);
 
-                if (vars[var].getDomainSize() > 1) { // If the domain is a singleton there is nothing to prune
-
-                    if (choicePrune(var)) {  // If var has a small domain then iterate over the domain and prune the values that are in the complement
-                        int ub = vars[var].getUB();
-                        for (int domainValue = vars[var].getLB(); domainValue <= ub; domainValue = vars[var].nextValue(domainValue)) {
-                            if (complementSCC.isPresent(domainValue)) {
-                                // Prune the pair (var, domainValue)
-                                vars[var].removeValue(domainValue, aCause);
-                                pruned = true;
-//                            System.out.println("Pair pruned: x_" + var + " -- " + domainValue);//DEBUG
-                            }
-                        }
-
-                    } else {    // If var has a large domain then iterate over the values in the complement and prune the ones that are in the domain of var
-                        int complementValue = complementSCC.getSource();
-                        while (complementSCC.hasNext(complementValue)) {
-                            complementValue = complementSCC.getNext(complementValue);
-                            if (vars[var].contains(complementValue)) {
-                                // Prune the pair (var, complementValue)
-                                vars[var].removeValue(complementValue, aCause);
-                                pruned = true;
-//                            System.out.println("Pair pruned: x_" + var + " -- " + complementValue);//DEBUG
-                            }
-                        }
+                    if (vars[var].updateBounds(minValueSCC, maxValueSCC, aCause)) { // All values outside [minValueSCC, maxValueSCC] can not be present in the discovered SCC, and thus are pruned from the domain of every variable of the SCC
+                        pruned = true;
                     }
 
+                    if (vars[var].getDomainSize() > 1) { // If the domain is a singleton there is nothing to prune
+
+                        if (choicePrune(var)) {  // If var has a small domain then iterate over the domain and prune the values that are in the complement
+                            int ub = vars[var].getUB();
+                            for (int domainValue = vars[var].getLB(); domainValue <= ub; domainValue = vars[var].nextValue(domainValue)) {
+                                if (complementSCC.isPresent(domainValue)) {
+                                    // Prune the pair (var, domainValue)
+                                    vars[var].removeValue(domainValue, aCause);
+                                    pruned = true;
+//                            System.out.println("Pair pruned: x_" + var + " -- " + domainValue);//DEBUG
+                                }
+                            }
+
+                        } else {    // If var has a large domain then iterate over the values in the complement and prune the ones that are in the domain of var
+                            int complementValue = complementSCC.getSource();
+                            while (complementSCC.hasNext(complementValue)) {
+                                complementValue = complementSCC.getNext(complementValue);
+                                if (vars[var].contains(complementValue)) {
+                                    // Prune the pair (var, complementValue)
+                                    vars[var].removeValue(complementValue, aCause);
+                                    pruned = true;
+//                            System.out.println("Pair pruned: x_" + var + " -- " + complementValue);//DEBUG
+                                }
+                            }
+                        }
+
+                    }
                 }
             }
         }
+
+        firstSCC = false;
 
         topTarjan = rootIndex; // Remove the discovered SCC from Tarjan's stack
 
@@ -461,18 +468,22 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     //***********************************************************************************
 
 
-    private void updateDynamicStructuresOpening(){
+    private void updateDynamicStructuresOpening(boolean propInstDependant){
         IEnvironment env = model.getEnvironment();
         int var  = variablesDynamic.getSource();
         while (variablesDynamic.hasNext(var)) {
             var = variablesDynamic.getNext(var);
             if (vars[var].isInstantiated()) {
-//                variablesDynamic.removeFromUniverse(var, env); // The instanciated variables are removed from the universe
-//
-//                if (valuesDynamic.isPresent(vars[var].getValue())) { // The values of the instanciated variables are removed from the universe
-//                    valuesDynamic.removeFromUniverse(vars[var].getValue(), env);
-//                    complementSCC.removeFromUniverse(vars[var].getValue(), env);
-//                }
+
+
+                if (propInstDependant) { // This block can be called only if the propagator related to the instantiation of the variables has been called before
+                    variablesDynamic.removeFromUniverse(var, env); // The instanciated variables are removed from the universe
+
+                    if (valuesDynamic.isPresent(vars[var].getValue())) { // The values of the instanciated variables are removed from the universe
+                        valuesDynamic.removeFromUniverse(vars[var].getValue(), env);
+                        complementSCC.removeFromUniverse(vars[var].getValue(), env);
+                    }
+                }
 
                 if (matching.inMatchingU(var)) { // Unmatch the instanciated variable from its current matched value
                     matching.unMatch(var, matching.getMatchU(var));
@@ -541,10 +552,10 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                 return false;
             case HYBRID:
 //                return vars[var].getDomainSize() < valuesDynamic.getSize();
-                return vars[var].getUB() - vars[var].getLB() < valuesDynamic.getSize(); // More suited to BitSet domain representation
+                return Math.max((vars[var].getUB() - vars[var].getLB() + 63) >> 6, vars[var].getDomainSize()) < valuesDynamic.getSize(); // More suited to BitSet domain representation
             case TUNED:
 //                return vars[var].getDomainSize() < valuesDynamic.getSize();
-                return vars[var].getUB() - vars[var].getLB() < valuesDynamic.getSize(); // More suited to BitSet domain representation
+                return Math.max((vars[var].getUB() - vars[var].getLB() + 63) >> 6, vars[var].getDomainSize()) < valuesDynamic.getSize(); // More suited to BitSet domain representation
             default:
                 return true;
         }
@@ -559,10 +570,10 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                 return false;
             case HYBRID:
 //                return vars[var].getDomainSize() < valuesDynamic.getSize();
-                return vars[var].getUB() - vars[var].getLB() < valuesDynamic.getSize(); // More suited to BitSet domain representation
+                return Math.max((vars[var].getUB() - vars[var].getLB() + 63) >> 6, vars[var].getDomainSize()) < valuesDynamic.getSize(); // More suited to BitSet domain representation
             case TUNED:
 //                return vars[var].getDomainSize() < Math.sqrt(valuesDynamic.getSize());
-                return vars[var].getUB() - vars[var].getLB() < Math.sqrt(valuesDynamic.getSize());  // More suited to BitSet domain representation
+                return Math.max((vars[var].getUB() - vars[var].getLB() + 63) >> 6, vars[var].getDomainSize()) < Math.sqrt(valuesDynamic.getSize()); // More suited to BitSet domain representation
             default:
                 return true;
         }
@@ -576,10 +587,10 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
                 return false;
             case HYBRID:
 //                return vars[var].getDomainSize() < complementSCC.getSize();
-                return vars[var].getUB() - vars[var].getLB() < complementSCC.getSize(); // More suited to BitSet domain representation
+                return Math.max((vars[var].getUB() - vars[var].getLB() + 63) >> 6, vars[var].getDomainSize()) < complementSCC.getSize(); // More suited to BitSet domain representation
             case TUNED:
 //                return vars[var].getDomainSize() < complementSCC.getSize();
-                return vars[var].getUB() - vars[var].getLB() < complementSCC.getSize(); // More suited to BitSet domain representation
+                return Math.max((vars[var].getUB() - vars[var].getLB() + 63) >> 6, vars[var].getDomainSize()) < complementSCC.getSize(); // More suited to BitSet domain representation
             default:
                 return true;
         }
@@ -597,8 +608,6 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
     private void setParent(int var, int val) {
         parentBFS[val - minValue] = var;
     }
-
-    private int min(int a, int b) {return a < b ? a : b;}
 
     private int getPre(int val) {
         return pre[val - minValue];
