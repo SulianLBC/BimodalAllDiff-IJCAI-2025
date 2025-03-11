@@ -78,6 +78,9 @@ public class Flatzinc extends RegParser {
     @Option(name = "-ad", usage = "")
     protected String ad = "DEFAULT";
 
+    @Option(name = "-in", usage = "")
+    protected String in = "DEFAULT";
+
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
@@ -103,7 +106,8 @@ public class Flatzinc extends RegParser {
 
     @Override
     public void createSettings() {
-        AllDifferent.OPTION = ad;
+        AllDifferent.OPTION_CONSISTENCY = ad;
+        AllDifferent.OPTION_PROPINST = in;
         defaultSettings = Settings.prod()
                 .setMinCardinalityForSumDecomposition(256)
                 .setLearntClausesDominancePerimeter(0)

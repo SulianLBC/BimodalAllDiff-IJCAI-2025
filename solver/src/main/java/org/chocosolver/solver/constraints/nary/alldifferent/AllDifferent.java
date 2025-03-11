@@ -23,7 +23,8 @@ import java.util.Objects;
  */
 public class AllDifferent extends Constraint {
 
-    public static String OPTION = "DEFAULT";
+    public static String OPTION_CONSISTENCY = "DEFAULT";
+    public static String OPTION_PROPINST = "DEFAULT";
 
     public static final String AC= "AC";
     public static final String AC_REGIN= "AC_REGIN";
@@ -42,9 +43,11 @@ public class AllDifferent extends Constraint {
     }
 
     private static Propagator[] createPropagators(IntVar[] VARS, String consistency) {
-        if(!Objects.equals(OPTION, "DEFAULT")){
-            consistency = OPTION;
+        if(!Objects.equals(OPTION_CONSISTENCY, "DEFAULT")){
+            consistency = OPTION_CONSISTENCY;
         }
+        boolean propInst = !Objects.equals(OPTION_PROPINST, "false") && !Objects.equals(OPTION_PROPINST, "FALSE");
+
         switch (consistency) {
             case NEQS: {
                 int s = VARS.length;
@@ -60,20 +63,21 @@ public class AllDifferent extends Constraint {
             case FC:
                 return new Propagator[]{new PropAllDiffInst(VARS)};
             case BC:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffBC(VARS)};
+                if (propInst) {return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffBC(VARS)};}
+                else {return new Propagator[]{new PropAllDiffBC(VARS)};}
             case AC_REGIN:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, false)};
+                if (propInst) {return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, false)};}
+                else {return new Propagator[]{new PropAllDiffAC(VARS, false)};}
             case AC:
             case AC_ZHANG:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, true)};
+                if (propInst) {return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, true)};}
+                else {return new Propagator[]{new PropAllDiffAC(VARS, true)};}
             case AC_CLASSIC:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, AC_CLASSIC)};
             case AC_COMPLEMENT:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, AC_COMPLEMENT)};
             case AC_HYBRID:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, AC_HYBRID)};
             case AC_TUNED:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, AC_TUNED)};
+                if(propInst) {return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, consistency)};}
+                else {return new Propagator[]{new PropAllDiffAC(VARS, consistency)};}
             case DEFAULT:
             default: {
                 // adds a Probabilistic AC (only if at least some variables have an enumerated domain)

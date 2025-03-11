@@ -138,7 +138,7 @@ public class AlgoAllDiffHybrid implements IAlldifferentAlgorithm {
 
         this.pruned = false;
 
-        updateDynamicStructuresOpening(true);
+        updateDynamicStructuresOpening(false);
 //        System.out.println("Universes of variables: " + variablesDynamic);//DEBUG
 //        System.out.println("Universes of values: " + valuesDynamic + " and  " + complementSCC);//DEBUG
 //        System.out.println("Maximum matching before update:");//DEBUG
