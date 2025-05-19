@@ -62,81 +62,27 @@ IntVar[] diag2 = new IntVar[n];
 
 Additional requirements:
 * MiniZinc 2.8+
-* git
+* Git
 
 1. Create the jar file of the project --> open a terminal at the root of the project and run the following command:
 ```
 mvn install -DskipTests
 ```
 
-2. Convert a MiniZinc file (eg. ```queens.mzn``` ) with a data file (eg. ```1000.dzn```):
-
+2. Convert a MiniZinc file (e.g. ```model.mzn```) with a data file (e.g. ```data.dzn```) into a FlatZinc file (e.g. ```model_data.fzn```):
 ```
-minizinc -I ./parsers/src/main/minizinc/mzn_lib -c -m
-/Users/kyzrsoze/Sources/MiniZinc/modelsForAlldifferent/nqueens/queens4.mzn -d
-/Users/kyzrsoze/Sources/MiniZinc/modelsForAlldifferent/nqueens/1000.dzn -o nqueens-1000.fzn
+minizinc -I ./parsers/src/main/minizinc/mzn_lib -c -m /AbsolutePathToModelDirectory/model.mzn -d /AbsolutePathToDataDirectory/data.dzn -o model_data.fzn
 ```
 
-3. Run Choco with the jar on the converted MiniZinc file:
+3. Run Choco with the jar on the FlatZinc file:
 ```
-java -jar ./parsers/target/choco-solver-5.0.0-beta.2-light.jar nqueens-1000.fzn
+java -jar ./parsers/target/choco-parsers-4.10.17-light.jar model_data.fzn
 ```
 
-4. (Optionnal) Specify the filtering algorithm for the AllDifferent constraints thanks to the ```- ad``` option:
-
-
-
-## old ##
-
-Choco-solver is available on [Maven Central Repository](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.choco-solver%22%20AND%20a%3A%22choco-solver%22),
-or directly from the [latest release](https://github.com/chocoteam/choco-solver/releases/latest).
-
-[Snapshot releases](https://oss.sonatype.org/content/repositories/snapshots/org/choco-solver/choco-solver/) are also available for curious.
-
-In the following, we distinguish two usages of Choco:
-
-- as a standalone library: the jar file includes all required dependencies,
-- as a library: the jar file excludes all dependencies.
-
-The name of the jar file terms the packaging:
-- `choco-solver-4.XX.Y-jar-with-dependencies.jar` or 
-- `choco-solver-4.XX.Y.jar`.
-- `choco-parsers-4.XX.Y-jar-with-dependencies.jar` or
-- `choco-parsers-4.XX.Y-light.jar` or
-- `choco-parsers-4.XX.Y.jar`.
-
-The `light` tagged jar file is a version of the `jar-with-dependencies` one with dependencies from this archive.
-
-A [Changelog file](./CHANGES.md) is maintained for each release.
-
-
-
-### As a stand-alone library ###
-
-The jar file contains all required dependencies.
-The next step is simply to add the jar file to your classpath of your application.
-Note that if your program depends on dependencies declared in the jar file,
-you should consider using choco as a library.
-
-### As a library ###
-
-The jar file does not contain any dependencies,
-as of being used as a dependency of another application.
-The next step is to add the jar file to your classpath of your application and also add the required dependencies.
-
-
-### Building from sources ###
-
-The source of the released versions are directly available in the `Tag` section.
-You can also download them using github features.
-Once downloaded, move to the source directory then execute the following command
-to make the jar:
-
-    $ mvn clean package -DskipTests
-
-If the build succeeded, the resulting jar will be automatically
-installed in your local maven repository and available in the `target` sub-folders.
-
+4. (Optionnal) Specify the filtering algorithm for the AllDifferent constraints by the ```-ad``` option:
+```
+java -jar ./parsers/target/choco-parsers-4.10.17-light.jar model_data.fzn -ad AC_TUNED
+```
 
 
 _Sulian Le Bozec-Chiffoleau_
