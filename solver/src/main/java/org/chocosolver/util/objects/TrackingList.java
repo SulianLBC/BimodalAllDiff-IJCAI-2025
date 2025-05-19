@@ -14,7 +14,7 @@ import org.chocosolver.memory.IEnvironment;
 /**
  * The Tracking list is similar to a doubly linked list
  * for which each element has a predecessor and a successor, implemented by arrays
- * An artifical source node is added at the beginning of the list
+ * An artificial source node is added at the beginning of the list
  * An artificial sink node is added at the end of the list
  * The tracking list allows to call the functions TrackPrev and TrackNext that are specific to this data structure
  * Furthermore, it is possible to distinguish the elements removed/reinserted to the list and to the universe in case the tracking list is used in a dynamic environment
@@ -177,7 +177,7 @@ public class TrackingList {
      * Special elementary function of the tracking list
      * Returns the first element in the in-list from a given element and toward the predecessors
      */
-    public int trackLeft(int e) {
+    public int trackPrev(int e) {
         int i = convertToIndex(e);
         int indexSource = convertToIndex(source);
         int indexSink = convertToIndex(sink);

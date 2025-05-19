@@ -124,7 +124,7 @@ public class TrackingListTest {
 
         for(int i = 1; i <= 10; i++) {
             assertEquals(Tlist.isPresent(i), false);
-            assertEquals(Tlist.trackLeft(i), Tlist.getSource());
+            assertEquals(Tlist.trackPrev(i), Tlist.getSource());
         }
 
         // Refill
@@ -165,9 +165,9 @@ public class TrackingListTest {
 
         Tlist.remove(5);
         Tlist.remove(6);
-        assertEquals(Tlist.trackLeft(5), 4);
-        assertEquals(Tlist.trackLeft(6), 4);
-        assertEquals(Tlist.trackLeft(7), 7);
+        assertEquals(Tlist.trackPrev(5), 4);
+        assertEquals(Tlist.trackPrev(6), 4);
+        assertEquals(Tlist.trackPrev(7), 7);
 
         assertEquals(Tlist.isPresent(5), false);
         assertEquals(Tlist.isPresent(6), false);
@@ -175,9 +175,9 @@ public class TrackingListTest {
         Tlist.refill();
         Tlist.remove(5);
 
-        assertEquals(Tlist.trackLeft(5), 4);
-        assertEquals(Tlist.trackLeft(6), 6);
-        assertEquals(Tlist.trackLeft(7), 7);
+        assertEquals(Tlist.trackPrev(5), 4);
+        assertEquals(Tlist.trackPrev(6), 6);
+        assertEquals(Tlist.trackPrev(7), 7);
 
         assertEquals(Tlist.isPresent(5), false);
         assertEquals(Tlist.isPresent(6), true);
@@ -195,7 +195,7 @@ public class TrackingListTest {
         Tlist.removeFromUniverse(4);
         assertEquals(Tlist.getSize(), 9);
         assertEquals(Tlist.getUniverseSize(), 9);
-        assertEquals(Tlist.trackLeft(4), 3);
+        assertEquals(Tlist.trackPrev(4), 3);
 
         Tlist.removeFromUniverse(1);
         Tlist.removeFromUniverse(2);
