@@ -54,18 +54,6 @@ public class BipartiteMatching {
 
     public int getsizeV() {return this.sizeV;}
 
-    // /**
-    //  * Returns the array of the matched vertices of V
-    //  * Warning: If all vertices of U are not matched it will contain some UNMATCHED values, use it wisely
-    //  */
-    // public int[] getMatchedU() {return matchingV;}
-
-    // /**
-    //  * Returns the array of the matched vertices of V
-    //  * Warning: If all vertices of V are not matched it will contain some UNMATCHED values, use it wisely
-    //  */
-    // public int[] getMatchedV() {return matchingU;}
-
     public boolean inMatchingU(int u) {
         return matchingU[u - minU] != UNMATCHED;
     }

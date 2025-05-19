@@ -37,7 +37,7 @@ public class AlgoAllDiffBimodal implements IAlldifferentAlgorithm {
 
     public static final String CLASSIC = "AC_CLASSIC";
     public static final String COMPLEMENT = "AC_COMPLEMENT";
-    public static final String PARTIAL = "AC_HYBRID";
+    public static final String PARTIAL = "AC_PARTIAL";
     public static final String TUNED = "AC_TUNED";
 
     ICause aCause;

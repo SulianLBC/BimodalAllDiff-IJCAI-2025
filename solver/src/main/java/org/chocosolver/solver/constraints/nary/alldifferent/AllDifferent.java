@@ -31,7 +31,7 @@ public class AllDifferent extends Constraint {
     public static final String AC_ZHANG = "AC_ZHANG";
     public static final String AC_CLASSIC= "AC_CLASSIC";
     public static final String AC_COMPLEMENT = "AC_COMPLEMENT";
-    public static final String AC_HYBRID= "AC_HYBRID";
+    public static final String AC_PARTIAL = "AC_PARTIAL";
     public static final String AC_TUNED = "AC_TUNED";
     public static final String BC= "BC";
     public static final String FC= "FC";
@@ -74,7 +74,7 @@ public class AllDifferent extends Constraint {
                 else {return new Propagator[]{new PropAllDiffAC(VARS, true)};}
             case AC_CLASSIC:
             case AC_COMPLEMENT:
-            case AC_HYBRID:
+            case AC_PARTIAL:
             case AC_TUNED:
                 if(propInst) {return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS, consistency)};}
                 else {return new Propagator[]{new PropAllDiffAC(VARS, consistency)};}
