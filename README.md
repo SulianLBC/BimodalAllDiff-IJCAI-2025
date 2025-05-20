@@ -1,5 +1,7 @@
 This is the code for the article "Bimodal Depth-First Search for Scalable GAC for AllDifferent" accepted at IJCAI 2025.
 
+This repository is a fork of Choco 4.10.17.
+
 The bimodal approach for the AllDifferent constraint is implemented in the AlgoAllDiffBimodal java class.
 
 ```java
